@@ -6,15 +6,18 @@ import SignOutButton from './SignOutButton';
 
 // Top navigation bar
 const Navbar = ({ open, setOpen, isAdmin }) => {
+  const hasSidebar = typeof setOpen === 'function';
   return (
     <header className="sticky top-0 z-30 h-14 w-full bg-white/70 backdrop-blur border-b border-gray-200 flex items-center gap-3 px-4 md:px-6">
-      <button
-        aria-label="Open sidebar"
-        onClick={()=>setOpen(true)}
-        className={`md:hidden inline-flex items-center justify-center h-10 w-10 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 active:scale-95 transition ${open ? 'opacity-0 pointer-events-none' : ''}`}
-      >
-        <Menu size={20} />
-      </button>
+      {hasSidebar && (
+        <button
+          aria-label="Open sidebar"
+          onClick={()=>setOpen(true)}
+          className={`md:hidden inline-flex items-center justify-center h-10 w-10 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 active:scale-95 transition ${open ? 'opacity-0 pointer-events-none' : ''}`}
+        >
+          <Menu size={20} />
+        </button>
+      )}
       <NavLink to="/" className="flex items-center gap-2 font-semibold tracking-tight text-gray-800">
         <Home size={18} /> <span>Home</span>
       </NavLink>

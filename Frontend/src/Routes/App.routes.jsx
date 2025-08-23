@@ -10,6 +10,7 @@ import { Routes, Route } from 'react-router-dom';
 import AdminDashBoard from '../components/Admin/AdminDashBoard';
 import AllReports from '../components/Admin/Reports/AllReports';
 import MyReports from '../components/User/profile/MyReports';
+import Layout from '../components/Layout';
 
 const RequireAdmin = ({ children }) => {
   const { isLoaded, user } = useUser();
@@ -19,15 +20,18 @@ const RequireAdmin = ({ children }) => {
   return isAdmin ? children : <Navigate to="/" replace />;
 };
 
+// Landing page rendered standalone (outside Layout). All other pages wrapped in Layout.
+const withLayout = (el) => <Layout>{el}</Layout>;
+
 const AppRoutes = () => (
   <Routes>
     <Route path="/" element={<Landing />} />
-    <Route path="/users" element={<UsersHome />} />
-    <Route path="/report" element={<Report />} />
-  <Route path="/my-reports" element={<MyReports />} />
-    <Route path="/profile" element={<Profile />} />
-    <Route path="/admin" element={<RequireAdmin><AdminDashBoard /></RequireAdmin>} />
-  <Route path="/admin/reports" element={<RequireAdmin><AllReports /></RequireAdmin>} />
+    <Route path="/users" element={withLayout(<UsersHome />)} />
+    <Route path="/report" element={withLayout(<Report />)} />
+    <Route path="/my-reports" element={withLayout(<MyReports />)} />
+    <Route path="/profile" element={withLayout(<Profile />)} />
+    <Route path="/admin" element={withLayout(<RequireAdmin><AdminDashBoard /></RequireAdmin>)} />
+    <Route path="/admin/reports" element={withLayout(<RequireAdmin><AllReports /></RequireAdmin>)} />
   </Routes>
 );
 
