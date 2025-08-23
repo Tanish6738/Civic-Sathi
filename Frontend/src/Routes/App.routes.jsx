@@ -8,6 +8,8 @@ import UsersHome from '../components/User/UsersHome';
 import Report from '../components/User/Report';
 import { Routes, Route } from 'react-router-dom';
 import AdminDashBoard from '../components/Admin/AdminDashBoard';
+import AllReports from '../components/Admin/Reports/AllReports';
+import MyReports from '../components/User/profile/MyReports';
 
 const RequireAdmin = ({ children }) => {
   const { isLoaded, user } = useUser();
@@ -22,8 +24,10 @@ const AppRoutes = () => (
     <Route path="/" element={<Landing />} />
     <Route path="/users" element={<UsersHome />} />
     <Route path="/report" element={<Report />} />
+  <Route path="/my-reports" element={<MyReports />} />
     <Route path="/profile" element={<Profile />} />
     <Route path="/admin" element={<RequireAdmin><AdminDashBoard /></RequireAdmin>} />
+  <Route path="/admin/reports" element={<RequireAdmin><AllReports /></RequireAdmin>} />
   </Routes>
 );
 

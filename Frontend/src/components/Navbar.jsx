@@ -1,6 +1,6 @@
 import React from 'react';
 import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from '@clerk/clerk-react';
-import { Menu, X, Home } from 'lucide-react';
+import { Menu, X, Home, FileText } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import adminEmails from '../data/data.json';
 
@@ -23,8 +23,11 @@ const Navbar = ({ open, setOpen }) => {
           <span className="hidden xs:inline">Home</span>
         </NavLink>
         <span className="font-semibold tracking-tight text-gray-800 hidden sm:inline">Nigam Ai</span>
+        <NavLink to="/my-reports" className={({isActive})=>`hidden sm:inline-flex items-center gap-1 text-sm font-medium ml-2 px-2 py-1 rounded ${isActive? 'bg-indigo-600 text-white':'text-gray-600 hover:text-gray-900 hover:bg-gray-100'}`}>
+          <FileText size={14} /> My Reports
+        </NavLink>
         {isAdmin && (
-          <NavLink to="/admin" className={({isActive})=>`hidden sm:inline text-sm font-medium ml-2 px-2 py-1 rounded ${isActive? 'bg-gray-900 text-white':'text-gray-600 hover:text-gray-900 hover:bg-gray-100'}`}>Admin</NavLink>
+          <NavLink to="/admin" className={({isActive})=>`hidden sm:inline text-sm font-medium ml-1 px-2 py-1 rounded ${isActive? 'bg-gray-900 text-white':'text-gray-600 hover:text-gray-900 hover:bg-gray-100'}`}>Admin</NavLink>
         )}
       </div>
       <div className="flex items-center gap-3">

@@ -1,6 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useUser } from '@clerk/clerk-react';
-import { Mail, ShieldCheck, LockKeyhole, KeyRound, CalendarClock, Hash, Copy, UserCircle } from 'lucide-react';
+import { Mail, ShieldCheck, LockKeyhole, KeyRound, CalendarClock, Hash, Copy, UserCircle, FileText, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+const STORAGE_KEY = 'reports';
+const loadReports = () => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; } };
 
 const Profile = () => {
   const { isLoaded, user } = useUser();
@@ -44,6 +48,16 @@ const Profile = () => {
     navigator.clipboard.writeText(id).catch(() => {});
   };
 
+  const [reports, setReports] = useState([]);
+  useEffect(()=>{ setReports(loadReports()); },[]);
+  const myReports = useMemo(()=> reports.filter(r=>r.userId===user.id).sort((a,b)=> new Date(b.createdAt)-new Date(a.createdAt)).slice(0,5),[reports,user.id]);
+
+  const statusClasses = {
+    Pending: 'bg-amber-100 text-amber-700 ring-amber-300',
+    Resolved: 'bg-emerald-100 text-emerald-700 ring-emerald-300',
+    Rejected: 'bg-rose-100 text-rose-700 ring-rose-300'
+  };
+
   return (
     <div className="max-w-5xl mx-auto space-y-8">
       {/* Header Card */}
@@ -75,7 +89,7 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* Details Grid */}
+  {/* Details Grid */}
       <div className="grid gap-6 md:grid-cols-2">
         <InfoCard
           icon={Hash}
@@ -99,6 +113,36 @@ const Profile = () => {
             badge={!passwordEnabled ? 'Action Recommended' : undefined}
             badgeTone={passwordEnabled ? 'ok' : 'warn'}
         />
+      </div>
+
+      {/* Recent Reports Summary */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold tracking-tight flex items-center gap-2"><FileText size={18}/> Recent Reports</h2>
+          <Link to="/my-reports" className="inline-flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-500">View All <ArrowRight size={14} /></Link>
+        </div>
+        {myReports.length === 0 ? (
+          <div className="text-sm text-gray-500 bg-white/70 backdrop-blur p-6 rounded-xl border border-gray-200">No reports submitted yet.</div>
+        ) : (
+          <ul className="space-y-3">
+            {myReports.map(r => (
+              <li key={r.id} className="group rounded-lg border border-gray-200 bg-white/70 backdrop-blur-sm p-4 flex flex-col gap-2 hover:shadow-sm transition relative overflow-hidden">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium text-gray-900 truncate" title={r.title}>{r.title}</p>
+                    <p className="text-xs text-gray-500 flex items-center gap-1"><CalendarClock size={12}/> {new Date(r.createdAt).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'})}</p>
+                  </div>
+                  <span className={`text-[10px] font-semibold tracking-wide px-2 py-1 rounded-md ring-1 ${statusClasses[r.status] || 'bg-gray-100 text-gray-600 ring-gray-300'}`}>{r.status}</span>
+                </div>
+                <p className="text-sm text-gray-600 line-clamp-2">{r.description}</p>
+                <div className="flex flex-wrap gap-2 text-[10px] font-medium uppercase tracking-wide">
+                  <span className="px-2 py-1 rounded-md bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200">{r.category}</span>
+                  {r.location && <span className="px-2 py-1 rounded-md bg-gray-100 text-gray-700 ring-1 ring-gray-300">{r.location}</span>}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );

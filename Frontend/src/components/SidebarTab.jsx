@@ -1,13 +1,14 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
-import { Users, BarChart3, User, X } from 'lucide-react';
+import { Users, BarChart3, User, X, FileText, Menu, ChevronLeft } from 'lucide-react';
 import adminEmails from '../data/data.json';
 
 // Base navigation configuration (admin items appended conditionally)
 const baseNavItems = [
   { to: '/users', label: 'Users', icon: Users },
   { to: '/report', label: 'Report', icon: BarChart3 },
+  { to: '/my-reports', label: 'My Reports', icon: FileText },
   { to: '/profile', label: 'Profile', icon: User },
 ];
 
@@ -22,7 +23,7 @@ const SidebarTab = ({ open, setOpen }) => {
       <aside
         aria-label="Primary navigation"
         role="navigation"
-        className={`fixed md:sticky md:top-0 z-40 top-0 left-0 h-full md:h-screen w-72 md:w-56 bg-gradient-to-b from-gray-900 via-gray-900 to-gray-950 text-gray-100 shadow-2xl md:shadow-none border-r border-gray-800/60 transform transition-transform duration-300 ease-in-out ${open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} md:flex md:flex-col backdrop-blur`}
+        className={`fixed md:sticky md:top-0 z-40 top-0 left-0 h-full md:h-screen w-72 md:w-56 bg-gradient-to-b from-gray-900 via-gray-900 to-gray-950 text-gray-100 shadow-2xl md:shadow-none border-r border-gray-800/60 transform transition-transform duration-300 ease-in-out ${open ? 'translate-x-0' : '-translate-x-full'} flex flex-col backdrop-blur`}
       >
         {/* Mobile drawer header */}
         <div className="flex md:hidden items-center justify-between px-4 h-14 border-b border-gray-800/70 bg-gray-900/70 backdrop-blur">
@@ -36,7 +37,18 @@ const SidebarTab = ({ open, setOpen }) => {
             </button>
         </div>
         {/* Desktop brand */}
-        <div className="hidden md:flex items-center gap-2 px-5 py-5 text-lg font-semibold tracking-tight">Nigam Ai</div>
+        <div className="hidden md:flex items-center justify-between gap-2 px-5 py-5 text-lg font-semibold tracking-tight">
+          <span>Nigam Ai</span>
+          {/* Desktop collapse button */}
+          <button
+            type="button"
+            aria-label="Collapse sidebar"
+            onClick={() => setOpen(false)}
+            className="inline-flex items-center justify-center h-8 w-8 rounded-md text-gray-400 hover:text-white hover:bg-gray-800 focus:outline-none focus:ring focus:ring-gray-600/50 transition"
+          >
+            <ChevronLeft size={18} />
+          </button>
+        </div>
         <nav className="flex-1 overflow-y-auto md:py-2 scrollbar-thin scrollbar-thumb-gray-700/70 scrollbar-track-transparent">
           <ul className="flex-col gap-1 px-3 md:px-4 py-3 md:py-0">
             {navItems.map(item => {
@@ -72,6 +84,16 @@ const SidebarTab = ({ open, setOpen }) => {
           onClick={() => setOpen(false)}
           className="fixed inset-0 bg-black/50 backdrop-blur-sm md:hidden cursor-pointer"
         />
+      )}
+      {/* Floating open button when sidebar closed on desktop */}
+      {!open && (
+        <button
+          aria-label="Open sidebar"
+          onClick={() => setOpen(true)}
+          className="hidden md:inline-flex fixed top-4 left-4 z-30 h-10 w-10 rounded-lg bg-gray-900/90 text-gray-200 border border-gray-700 shadow-lg hover:bg-gray-800 focus:outline-none focus:ring focus:ring-gray-600/50 transition"
+        >
+          <Menu size={20} />
+        </button>
       )}
     </>
   );
