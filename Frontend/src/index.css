@@ -1,1 +1,46 @@
 @import "tailwindcss";
+
+:root {
+	--color-bg: 255 255 255; /* white */
+	--color-surface: 248 250 252; /* light gray */
+	--color-primary: 59 130 246; /* blue-500 */
+	--color-primary-accent: 37 99 235; /* blue-600 */
+	--color-accent: 249 115 22; /* orange-500 */
+	--color-accent-emph: 234 88 12; /* orange-600 */
+	--color-text: 17 24 39; /* gray-900 */
+	--color-text-soft: 75 85 99; /* gray-600 */
+	--ease-spring: cubic-bezier(.4,0,.2,1);
+}
+
+html {
+	scroll-behavior: smooth;
+}
+
+body {
+	background-color: rgb(var(--color-bg));
+	color: rgb(var(--color-text));
+	font-feature-settings: "ss01";
+}
+
+/* Utility: glass effect */
+.glass {
+	background-color: rgba(255,255,255,0.7);
+	backdrop-filter: saturate(140%) blur(18px);
+	-webkit-backdrop-filter: saturate(140%) blur(18px);
+	border: 1px solid rgba(255,255,255,0.3);
+	box-shadow: 0 4px 10px -2px rgba(0,0,0,.06);
+}
+
+/* Lenis smooth scroll adjustments */
+html.lenis, html.lenis body { height: auto; }
+ .lenis.lenis-smooth { scroll-behavior: auto !important; }
+ .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+ .lenis.lenis-stopped { overflow: hidden; }
+ .lenis.lenis-scrolling iframe { pointer-events: none; }
+
+/* Keyframes for subtle fade & slide */
+@keyframes fade-up { from { opacity:0; transform:translateY(12px);} to {opacity:1; transform:translateY(0);} }
+@keyframes scale-in { from { opacity:0; transform:scale(.94);} to { opacity:1; transform:scale(1);} }
+
+.animate-fade-up { animation: fade-up .6s var(--ease-spring) both; }
+.animate-scale-in { animation: scale-in .5s var(--ease-spring) both; }
