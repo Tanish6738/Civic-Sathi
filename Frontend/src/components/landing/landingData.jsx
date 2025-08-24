@@ -27,19 +27,22 @@ import {
   BugAntIcon,
 } from "@heroicons/react/24/solid";
 
-// Placeholder images (local assets missing)
-export const Image1 =
-  "https://via.placeholder.com/1200x600/3F46F9/FFFFFF?text=NigamAI+Slide+1";
-export const Image2 =
-  "https://via.placeholder.com/1200x600/3940D6/FFFFFF?text=NigamAI+Slide+2";
-export const Image3 =
-  "https://via.placeholder.com/1200x600/3037B8/FFFFFF?text=NigamAI+Slide+3";
-export const Phonephoto =
-  "https://via.placeholder.com/400x400/6D28D9/FFFFFF?text=Support";
-export const Qrcode =
-  "https://via.placeholder.com/200x200/FFFFFF/000000?text=QR";
+// Local image assets (Vite will optimize and hash these on build)
+import img1 from "../../assets/1.png";
+import img2 from "../../assets/2.png";
+import img3 from "../../assets/3.png";
+import supportPhone from "../../assets/supportPhone.png";
+import qrPng from "../../assets/qrcode.png";
 
-export const images = [Image1, Image2, Image3];
+// Public logo (could reuse one of the hero images or a dedicated logo file later)
+export const Logo = img1;
+
+// Hero slider images (previously referenced undefined Image1; now fixed)
+export const images = [img1, img2, img3];
+
+// Support visuals
+export const Phonephoto = supportPhone;
+export const Qrcode = qrPng;
 
 export const cardData = [
   { icon: <FaHome />, title: "Property Tax Application", subtitle: "Pay & manage your property tax easily" },

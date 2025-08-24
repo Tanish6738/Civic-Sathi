@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Navbar,
   HeroSlider,
@@ -15,6 +15,21 @@ import {
  * Uses semantic <main> container instead of a generic <div> for accessibility.
  */
 export default function Landing() {
+  useEffect(() => {
+    const handleServices = () => {
+      // Placeholder: could trigger analytics or chain next section animations
+      // console.log('Services section fully revealed');
+    };
+    const handleSteps = () => {
+      // console.log('Steps timeline fully revealed');
+    };
+    window.addEventListener('services:revealComplete', handleServices);
+    window.addEventListener('steps:revealComplete', handleSteps);
+    return () => {
+      window.removeEventListener('services:revealComplete', handleServices);
+      window.removeEventListener('steps:revealComplete', handleSteps);
+    };
+  }, []);
   return (
     <main className="w-full flex flex-col min-h-screen">
       {/* Primary navigation */}
