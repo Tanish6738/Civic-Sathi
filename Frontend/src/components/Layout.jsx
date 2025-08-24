@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useUser } from '@clerk/clerk-react';
-import { Users, BarChart3, User, FileText, Shield, ListChecks, Layers } from 'lucide-react';
+import { Users, BarChart3, User, FileText, Shield, ListChecks, Layers, History, Building2 } from 'lucide-react';
 import adminEmails from '../data/data.json';
 import SidebarTab from './SidebarTab';
 import Navbar from './Navbar';
@@ -8,21 +8,33 @@ import PhoneModal from './User/PhoneModal';
 import { useDbUser } from '../contexts/UserContext';
 import { getUserById } from '../services/user.services';
 
-// Central nav config
+// Base (non-admin) navigation items
 const NAV = [
-  { to: '/users', label: 'Users', icon: Users },
-  { to: '/user/reports/new', label: 'New Report', icon: BarChart3 },
+  { to: '/report/new', label: 'New Report', icon: BarChart3 },
   { to: '/user/categories', label: 'Services', icon: Layers },
+  { to: '/departments', label: 'Departments', icon: Building2 },
   { to: '/user/reports', label: 'My Reports', icon: FileText },
   { to: '/user/profile', label: 'Profile', icon: User },
 ];
 
 const Layout = ({ children }) => {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(() => {
+    // Start closed on small screens for better mobile UX
+    if (typeof window !== 'undefined' && window.innerWidth < 768) return false;
+    return true;
+  });
   const { isLoaded, user } = useUser();
   const email = user?.primaryEmailAddress?.emailAddress;
   const isAdmin = !!email && Array.isArray(adminEmails) && adminEmails.includes(email);
-  const navItems = isAdmin ? [...NAV, { to: '/admin', label: 'Admin', icon: Shield }, { to: '/admin/reports', label: 'All Reports', icon: ListChecks }] : NAV;
+  const navItems = isAdmin
+    ? [
+        ...NAV,
+        { to: '/users', label: 'Users', icon: Users },
+        { to: '/admin', label: 'Admin', icon: Shield },
+        { to: '/admin/reports', label: 'All Reports', icon: ListChecks },
+        { to: '/audit-logs', label: 'Audit Logs', icon: History }
+      ]
+    : NAV;
 
   // Persist sidebar state between reloads
   useEffect(()=>{
@@ -49,7 +61,7 @@ const Layout = ({ children }) => {
 
   return (
     <div className={`min-h-screen w-full flex bg-gradient-to-br from-gray-100 via-gray-100 to-gray-200 text-gray-900 ${needsPhone ? 'overflow-hidden' : ''}`}>
-      <SidebarTab open={open} setOpen={setOpen} navItems={navItems} isLoaded={isLoaded} user={user} />
+  <SidebarTab open={open} setOpen={setOpen} navItems={navItems} isLoaded={isLoaded} user={user} isAdmin={isAdmin} />
       <div className="flex-1 flex flex-col min-h-screen md:pl-0 relative">
         <Navbar open={open} setOpen={setOpen} isAdmin={isAdmin} />
         <main className={`flex-1 p-4 md:p-6 ${needsPhone ? 'pointer-events-none select-none blur-sm' : ''}`}>{children}</main>

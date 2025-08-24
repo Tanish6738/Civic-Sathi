@@ -13,6 +13,9 @@ router.post('/categorize', reportController.categorizeReport);
 // GET /api/reports
 router.get('/', reportController.listReports);
 
+// POST /api/reports/bulk-update
+router.post('/bulk-update', reportController.bulkUpdateReports);
+
 // GET /api/reports/:id
 router.get('/:id', reportController.getReportById);
 

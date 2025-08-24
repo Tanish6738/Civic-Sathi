@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Menu, Home, FileText, Layers, Shield, ListChecks } from 'lucide-react';
+import { Menu, Home, FileText, Layers, Shield, ListChecks, PlusCircle, Users, History, Building2, User as UserIcon } from 'lucide-react';
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react';
 import SignOutButton from './SignOutButton';
 import { motion } from 'framer-motion';
@@ -14,14 +14,18 @@ const Navbar = ({ open, setOpen, isAdmin }) => {
   // Central nav configuration (only key, label, to, icon)
   const navItems = useMemo(() => {
     const base = [
+      { key: 'new-report', label: 'New Report', to: '/report/new', icon: PlusCircle },
       { key: 'services', label: 'Services', to: '/user/categories', icon: Layers },
-      { key: 'departments', label: 'Departments', to: '/departments', icon: Layers },
+      { key: 'departments', label: 'Departments', to: '/departments', icon: Building2 },
       { key: 'my-reports', label: 'My Reports', to: '/user/reports', icon: FileText },
+      { key: 'profile', label: 'Profile', to: '/user/profile', icon: UserIcon },
     ];
     if (isAdmin) {
       base.push(
+        { key: 'users', label: 'Users', to: '/users', icon: Users },
         { key: 'admin', label: 'Admin', to: '/admin', icon: Shield },
-        { key: 'all-reports', label: 'All Reports', to: '/admin/reports', icon: ListChecks }
+        { key: 'all-reports', label: 'All Reports', to: '/admin/reports', icon: ListChecks },
+        { key: 'audit', label: 'Audit Logs', to: '/audit-logs', icon: History }
       );
     }
     return base;
@@ -34,14 +38,15 @@ const Navbar = ({ open, setOpen, isAdmin }) => {
       className="sticky top-0 z-30 h-14 w-full bg-white/70 backdrop-blur-xl border-b border-gray-200/70 flex items-center gap-3 px-3 md:px-6 shadow-sm"
       role="banner"
     >
-      {hasSidebar && (
+  {hasSidebar && (
         <motion.button
-          aria-label="Open navigation menu"
-          onClick={() => setOpen(true)}
+          aria-label={open ? 'Close navigation menu' : 'Open navigation menu'}
+          aria-expanded={open}
+          onClick={() => setOpen(o => !o)}
           whileTap={{ scale: 0.9 }}
-          className={`md:hidden inline-flex items-center justify-center h-10 w-10 rounded-md border border-gray-300/70 bg-white text-gray-700 hover:bg-gray-50 active:scale-95 transition ${open ? 'opacity-0 pointer-events-none' : ''}`}
+          className={`md:hidden inline-flex items-center justify-center h-10 w-10 rounded-md border border-gray-300/70 bg-white text-gray-700 hover:bg-gray-50 active:scale-95 transition`}
         >
-          <Menu size={20} />
+          {open ? <span className="text-lg leading-none">×</span> : <Menu size={20} />}
         </motion.button>
       )}
 
@@ -55,7 +60,7 @@ const Navbar = ({ open, setOpen, isAdmin }) => {
       </NavLink>
 
       {/* Primary navigation (hidden on very small screens, rely on sidebar there) */}
-      <nav className="hidden md:flex items-center gap-1 ml-2" aria-label="Primary">
+  <nav className="hidden md:flex items-center gap-1 ml-2" aria-label="Primary">
         {navItems.map(item => {
           const Icon = item.icon;
           return (

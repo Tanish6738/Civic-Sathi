@@ -116,8 +116,10 @@ export default function CategoriesGrid() {
         {/* Mobile horizontal scroll (chips) */}
         <div className="md:hidden -mx-4 mb-8 overflow-x-auto pb-2" data-lenis-prevent ref={mobileScrollerRef}>
           <div className="flex gap-3 px-4 min-w-max" role="listbox" aria-label="Service categories">
-            {(loading ? Array.from({ length: 6 }) : filtered).map((cat, i) => (
-              <div key={cat?.id || i} role="option" aria-selected={focusedChip === i}>
+            {(loading ? Array.from({ length: 6 }) : filtered).map((cat, i) => {
+              const key = loading ? i : (cat?._id || cat?.id || cat?.name || i);
+              return (
+              <div key={key} role="option" aria-selected={focusedChip === i}>
                 {loading ? (
                   <div className="animate-pulse flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm text-xs w-40 h-10">
                     <div className="w-6 h-6 rounded-full bg-gray-200" />
@@ -135,7 +137,7 @@ export default function CategoriesGrid() {
                   </button>
                 )}
               </div>
-            ))}
+            )})}
           </div>
         </div>
 
@@ -161,8 +163,10 @@ export default function CategoriesGrid() {
                   </div>
                 </li>
               ))
-            : filtered.map(cat => (
-              <motion.li key={cat.id} variants={itemV} className="list-none">
+            : filtered.map(cat => {
+              const key = cat._id || cat.id || cat.name; // ensure stable unique key
+              return (
+              <motion.li key={key} variants={itemV} className="list-none">
                 <button
                   className={baseCard}
                   aria-label={`Open ${cat.name} form`}
@@ -175,7 +179,7 @@ export default function CategoriesGrid() {
                   </span>
                 </button>
               </motion.li>
-            ))}
+            )})}
         </motion.ul>
 
         <div className="flex justify-center mt-10">

@@ -1,6 +1,7 @@
 import React from 'react';
 import CallDataSection from './CallDataSection';
 import WebComplaintsSection from './WebComplaintsSection';
+import UserManagement from './UserManagement';
 
 // Container styling assumes Tailwind (present in dependencies). Adjust if needed.
 const AdminDashBoard = () => {
@@ -14,6 +15,9 @@ const AdminDashBoard = () => {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-10 items-start">
         <CallDataSection />
         <WebComplaintsSection />
+        <div className="xl:col-span-2">
+          <UserManagement />
+        </div>
       </div>
     </div>
   );

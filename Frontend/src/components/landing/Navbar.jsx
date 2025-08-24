@@ -12,7 +12,8 @@ gsap.registerPlugin(ScrollTrigger);
 // Central nav list (user scope)
 const BASE_LINKS = [
   { to: '/user/categories', label: 'Services' },
-  { to: '/user/reports/new', label: 'Report' },
+  // Route adjusted to match App.routes.jsx which defines '/report/new'
+  { to: '/report/new', label: 'Report' },
   { to: '/user/reports', label: 'My Reports' },
   { to: '/user/profile', label: 'Profile' },
 ];
@@ -43,10 +44,33 @@ export default function Navbar() {
     return () => ctx.revert();
   }, []);
 
+  // Close on outside click & Esc, lock scroll when open
+  useEffect(() => {
+    function onKey(e){ if(e.key === 'Escape') setMenuOpen(false); }
+    function onClick(e){
+      if(!menuOpen) return;
+      const header = headerRef.current;
+      if(header && !header.contains(e.target)) setMenuOpen(false);
+    }
+    if(menuOpen){
+      document.addEventListener('keydown', onKey);
+      document.addEventListener('mousedown', onClick);
+      // lock scroll (simple approach)
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('mousedown', onClick);
+      document.body.style.overflow = '';
+    };
+  }, [menuOpen]);
+
   return (
     <header
       ref={headerRef}
-  className="group sticky top-2 z-50 flex justify-between items-center px-4 sm:px-6 py-3 mx-auto w-[90%] max-w-7xl rounded-2xl bg-white/10 backdrop-blur-2xl saturate-150 shadow-[0_8px_30px_-4px_rgba(0,0,0,0.25)] border border-white/25 ring-1 ring-white/30 gap-4 transition-colors duration-300 overflow-hidden supports-[backdrop-filter]:bg-white/10"
+      className={`group sticky top-2 z-50 flex justify-between items-center px-4 sm:px-6 py-3 mx-auto w-[90%] max-w-7xl rounded-2xl bg-white/10 backdrop-blur-2xl saturate-150 shadow-[0_8px_30px_-4px_rgba(0,0,0,0.25)] border border-white/25 ring-1 ring-white/30 gap-4 transition-colors duration-300 supports-[backdrop-filter]:bg-white/10 ${menuOpen ? 'overflow-visible' : 'overflow-hidden'}`}
     >
       {/* subtle sheen */}
       <span className="pointer-events-none absolute inset-0 before:absolute before:inset-0 before:bg-[linear-gradient(135deg,rgba(255,255,255,0.25)_0%,rgba(255,255,255,0.05)_35%,rgba(255,255,255,0)_60%)] opacity-60 mix-blend-overlay" />
@@ -107,6 +131,8 @@ export default function Navbar() {
       {/* Mobile menu toggle */}
       <motion.button
         aria-label={menuOpen ? "Close menu" : "Open menu"}
+        aria-expanded={menuOpen}
+        aria-controls="mobile-menu"
         onClick={() => setMenuOpen(o => !o)}
         whileTap={{ scale: .9 }}
         className="md:hidden inline-flex items-center justify-center w-11 h-11 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-100 active:scale-95 transition relative overflow-hidden"
@@ -123,14 +149,15 @@ export default function Navbar() {
 
       {/* Mobile dropdown */}
       <AnimatePresence>
-        {menuOpen && (
+    {menuOpen && (
           <motion.div
             key="mobile-menu"
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: .28, ease: 'easeOut' }}
-            className="md:hidden absolute top-full left-0 w-full bg-white/15 backdrop-blur-2xl saturate-150 shadow-[0_8px_28px_-4px_rgba(0,0,0,0.3)] border-t border-white/20 origin-top z-50 rounded-b-2xl"
+      id="mobile-menu"
+      className="md:hidden absolute top-full left-0 w-full bg-white backdrop-blur-2xl saturate-150 rounded-md border-white/20 origin-top z-50 rounded-b-2xl"
           >
             <div className="flex flex-col p-4 gap-2">
               {links.map((l, i) => (

@@ -113,21 +113,28 @@ exports.listUsers = async (req, res) => {
 };
 
 // PATCH /api/users/:id
+// Auth: Only admin/superadmin can update arbitrary users. Role changes limited to superadmin.
 exports.updateUser = async (req, res) => {
   try {
+    const actor = req.user; // assume auth middleware attaches { id, role }
+    if (!actor) return respond(res, { success: false, status: 401, message: 'Unauthorized' });
+    if (!['admin', 'superadmin'].includes(actor.role)) {
+      return respond(res, { success: false, status: 403, message: 'Forbidden' });
+    }
+
     const { id } = req.params;
     if (!id) return respond(res, { success: false, status: 400, message: 'User id is required' });
 
-    const allowed = ['name', 'phone', 'department', 'location', 'role'];
+    const allowed = ['name', 'phone', 'department', 'location'];
     const updates = {};
     for (const key of allowed) {
       if (key in req.body) updates[key] = req.body[key];
     }
-
-    // TODO: enforce that only admin/superadmin can change role
-    if ('role' in updates) {
-      // placeholder security check
-      // delete updates.role if requester not admin
+    if ('role' in req.body) {
+      if (actor.role !== 'superadmin') {
+        return respond(res, { success: false, status: 403, message: 'Only superadmin can change roles' });
+      }
+      updates.role = req.body.role;
     }
 
     const user = await User.findByIdAndUpdate(id, updates, { new: true });
@@ -161,10 +168,13 @@ exports.updateUserPhone = async (req, res) => {
 // DELETE /api/users/:id (soft delete)
 exports.softDeleteUser = async (req, res) => {
   try {
+    const actor = req.user;
+    if (!actor) return respond(res, { success: false, status: 401, message: 'Unauthorized' });
+    if (!['admin', 'superadmin'].includes(actor.role)) {
+      return respond(res, { success: false, status: 403, message: 'Forbidden' });
+    }
     const { id } = req.params;
     if (!id) return respond(res, { success: false, status: 400, message: 'User id is required' });
-
-    // TODO: admin/superadmin authorization check
 
     const user = await User.findByIdAndUpdate(id, { status: 'inactive' }, { new: true });
     if (!user) return respond(res, { success: false, status: 404, message: 'User not found' });

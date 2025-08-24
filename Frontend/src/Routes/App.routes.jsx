@@ -1,30 +1,38 @@
-import React, { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
-import { useUser, SignedIn, SignedOut } from '@clerk/clerk-react';
-import adminEmails from '../data/data.json';
-import Profile from '../components/User/Profile';
-import Landing from '../components/Basic/landing';
-import UsersHome from '../components/User/UsersHome';
-import Report from '../components/User/Report';
-import CategoryFormPage from '../components/CategoryFroms/CategoryFormPage';
-import { Routes, Route } from 'react-router-dom';
-import { syncUser as syncUserService } from '../services/user.services';
-import AdminDashBoard from '../components/Admin/AdminDashBoard';
-import AllReports from '../components/Admin/Reports/AllReports';
-import MyReports from '../components/User/profile/MyReports';
-import Layout from '../components/Layout';
-import CategoriesGrid from '../components/landing/CategoriesGrid';
-import AuditLogList from '../components/Admin/AuditLogList';
-import DepartmentsHome from '../components/User/DepartmentsHome';
-import DepartmentDetail from '../components/User/DepartmentDetail';
-import { UserProvider } from '../contexts/UserContext';
+import React, { useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
+import { useUser, SignedOut } from "@clerk/clerk-react";
+import adminEmails from "../data/data.json";
+import Profile from "../components/User/Profile";
+import Landing from "../components/Basic/landing";
+import UsersHome from "../components/User/UsersHome";
+import Report from "../components/User/Report";
+import CreateReport from "../components/User/CreateReport";
+import CategoryFormPage from "../components/CategoryFroms/CategoryFormPage";
+import { Routes, Route } from "react-router-dom";
+import { syncUser as syncUserService } from "../services/user.services";
+import AdminDashBoard from "../components/Admin/AdminDashBoard";
+import AllReports from "../components/Admin/Reports/AllReports";
+import MyReports from "../components/User/profile/MyReports";
+import Layout from "../components/Layout";
+import AuditLogList from "../components/Admin/AuditLogList";
+import DepartmentsHome from "../components/User/DepartmentsHome";
+import DepartmentDetail from "../components/User/DepartmentDetail";
+import { UserProvider } from "../contexts/UserContext";
 
 const RequireAdmin = ({ children }) => {
   const { isLoaded, user } = useUser();
   if (!isLoaded) return null; // could render a spinner
   const email = user?.primaryEmailAddress?.emailAddress;
-  const isAdmin = !!email && Array.isArray(adminEmails) && adminEmails.includes(email);
+  const isAdmin =
+    !!email && Array.isArray(adminEmails) && adminEmails.includes(email);
   return isAdmin ? children : <Navigate to="/" replace />;
+};
+
+// Generic protection: any non-root route requires sign-in. Falls back to landing page.
+const ProtectedRoute = ({ children }) => {
+  const { isLoaded, isSignedIn } = useUser();
+  if (!isLoaded) return null; // optionally a loader/spinner
+  return isSignedIn ? children : <Navigate to="/" replace />;
 };
 
 // Landing page rendered standalone (outside Layout). All other pages wrapped in Layout.
@@ -46,8 +54,8 @@ const AppRoutes = () => {
         const res = await syncUserService(user);
         if (!cancelled) setDbUser(res);
       } catch (err) {
-        console.error('User sync failed', err);
-        if (!cancelled) setSyncError('Failed to sync user profile');
+        console.error("User sync failed", err);
+        if (!cancelled) setSyncError("Failed to sync user profile");
         // Optional: integrate a toast notification system here
       } finally {
         if (!cancelled) setSyncing(false);
@@ -63,36 +71,111 @@ const AppRoutes = () => {
     <UserProvider initialUser={dbUser}>
       <Routes>
         <Route path="/" element={<Landing />} />
-        <Route path="/user/profile" element={<SignedIn>{withLayout(<Profile />)}</SignedIn>} />
-  <Route path="/user/reports" element={<SignedIn>{withLayout(<MyReports />)}</SignedIn>} />
-  <Route path="/user/reports/:id" element={<SignedIn>{withLayout(<Report />)}</SignedIn>} />
-        <Route path="/user/categories" element={<SignedIn>{withLayout(<CategoryFormPage />)}</SignedIn>} />
-        <Route path="/categories" element={withLayout(<CategoriesGrid />)} />
-  <Route path="/departments" element={withLayout(<DepartmentsHome />)} />
-  <Route path="/departments/:id" element={withLayout(<DepartmentDetail />)} />
-        <Route path="/users" element={<SignedIn>{withLayout(<UsersHome />)}</SignedIn>} />
+        <Route
+          path="/user/profile"
+          element={<ProtectedRoute>{withLayout(<Profile />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/user/reports"
+          element={<ProtectedRoute>{withLayout(<MyReports />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/user/reports/:id"
+          element={<ProtectedRoute>{withLayout(<Report />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/report/new"
+          element={<ProtectedRoute>{withLayout(<CreateReport />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/user/categories"
+          element={<ProtectedRoute>{withLayout(<CategoryFormPage />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/departments"
+          element={<ProtectedRoute>{withLayout(<DepartmentsHome />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/departments/:id"
+          element={<ProtectedRoute>{withLayout(<DepartmentDetail />)}</ProtectedRoute>}
+        />
+        <Route
+          path="/users"
+          element={<ProtectedRoute>{withLayout(<UsersHome />)}</ProtectedRoute>}
+        />
         <Route
           path="/admin"
-          element={<SignedIn>{withLayout(<RequireAdmin><AdminDashBoard /></RequireAdmin>)}</SignedIn>}
+          element={
+            <ProtectedRoute>
+              {withLayout(
+                <RequireAdmin>
+                  <AdminDashBoard />
+                </RequireAdmin>
+              )}
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/admin/reports"
-          element={<SignedIn>{withLayout(<RequireAdmin><AllReports /></RequireAdmin>)}</SignedIn>}
+          element={
+            <ProtectedRoute>
+              {withLayout(
+                <RequireAdmin>
+                  <AllReports />
+                </RequireAdmin>
+              )}
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/audit-logs"
-          element={<SignedIn>{withLayout(<RequireAdmin><AuditLogList /></RequireAdmin>)}</SignedIn>}
+          element={
+            <ProtectedRoute>
+              {withLayout(
+                <RequireAdmin>
+                  <AuditLogList />
+                </RequireAdmin>
+              )}
+            </ProtectedRoute>
+          }
         />
-        <Route
-          path="*"
-          element={<Navigate to="/" replace />}
-        />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <SignedOut>
         {/* Could show a public landing or redirect. Already have / route. */}
       </SignedOut>
-      {syncing && <div style={{ position: 'fixed', bottom: 8, right: 8, background: '#222', color: '#fff', padding: '6px 10px', borderRadius: 4, fontSize: 12 }}>Syncing profile...</div>}
-      {syncError && <div style={{ position: 'fixed', bottom: 8, right: 8, background: '#b00020', color: '#fff', padding: '6px 10px', borderRadius: 4, fontSize: 12 }}>{syncError}</div>}
+      {syncing && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 8,
+            right: 8,
+            background: "#222",
+            color: "#fff",
+            padding: "6px 10px",
+            borderRadius: 4,
+            fontSize: 12,
+          }}
+        >
+          Syncing profile...
+        </div>
+      )}
+      {syncError && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 8,
+            right: 8,
+            background: "#b00020",
+            color: "#fff",
+            padding: "6px 10px",
+            borderRadius: 4,
+            fontSize: 12,
+          }}
+        >
+          {syncError}
+        </div>
+      )}
     </UserProvider>
   );
 };

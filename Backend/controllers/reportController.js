@@ -103,10 +103,10 @@ exports.createReport = async (req, res) => {
 };
 
 // GET /api/reports
-// List reports with optional filters & pagination
+// List reports with optional filters & pagination (supports reporter, status, category, search)
 exports.listReports = async (req, res) => {
   try {
-    const { reporter: reporterParam, status, page = 1, limit = 10 } = req.query;
+    const { reporter: reporterParam, status, page = 1, limit = 10, category: categoryParam, search } = req.query;
     const filters = {};
 
     // Reporter filtering: accept either Mongo ObjectId or external clerkId
@@ -142,6 +142,21 @@ exports.listReports = async (req, res) => {
       filters.status = { $ne: 'deleted' }; // default exclude soft-deleted
     }
 
+    if (categoryParam) {
+      if (mongoose.Types.ObjectId.isValid(categoryParam)) {
+        filters.category = categoryParam;
+      } else {
+        // attempt name match (case-insensitive)
+        const catDoc = await Category.findOne({ name: new RegExp('^' + categoryParam + '$', 'i') }).select('_id');
+        if (catDoc) filters.category = catDoc._id; else filters.category = null; // force empty result
+      }
+    }
+
+    if (search) {
+      const rx = new RegExp(search, 'i');
+      filters.$or = [{ title: rx }, { description: rx }];
+    }
+
     const pageNum = Math.max(parseInt(page, 10) || 1, 1);
     const limitNum = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 100);
     const skip = (pageNum - 1) * limitNum;
@@ -171,6 +186,71 @@ exports.listReports = async (req, res) => {
     });
   } catch (err) {
     console.error('listReports error:', err?.message || err);
+    return respond(res, { success: false, status: 500, message: 'Internal server error' });
+  }
+};
+
+// POST /api/reports/bulk-update
+// Body: { ids: [..], status?, assignedTo?, categoryId? }
+// Auth: Only users with role admin or superadmin (req.user.role expected injected by auth middleware)
+exports.bulkUpdateReports = async (req, res) => {
+  try {
+    const actor = req.user; // assume middleware sets req.user with { id, role }
+    if (!actor || !['admin', 'superadmin'].includes(actor.role)) {
+      return respond(res, { success: false, status: 403, message: 'Forbidden: insufficient role' });
+    }
+
+    const { ids, status, assignedTo, categoryId } = req.body || {};
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return respond(res, { success: false, status: 400, message: 'ids array required' });
+    }
+
+    // Validate ids
+    const validIds = ids.filter(id => mongoose.Types.ObjectId.isValid(id));
+    if (validIds.length === 0) {
+      return respond(res, { success: false, status: 400, message: 'No valid report ids provided' });
+    }
+
+    const update = {};
+    const historyActionParts = [];
+    const allowedStatuses = ['draft','submitted','assigned','in_progress','awaiting_verification','verified','closed','deleted'];
+    if (status) {
+      if (!allowedStatuses.includes(status)) {
+        return respond(res, { success: false, status: 400, message: 'Invalid status value' });
+      }
+      update.status = status;
+      historyActionParts.push(`bulk set status -> ${status}`);
+    }
+    if (Array.isArray(assignedTo)) {
+      // validate user ids
+      const assigneesValid = assignedTo.filter(id => mongoose.Types.ObjectId.isValid(id));
+      if (assigneesValid.length) {
+        update.assignedTo = assigneesValid;
+        historyActionParts.push(`assigned ${assigneesValid.length} user(s)`);
+      }
+    }
+    if (categoryId) {
+      if (!mongoose.Types.ObjectId.isValid(categoryId)) {
+        return respond(res, { success: false, status: 400, message: 'Invalid categoryId' });
+      }
+      update.category = categoryId;
+      historyActionParts.push('changed category');
+    }
+    if (Object.keys(update).length === 0) {
+      return respond(res, { success: false, status: 400, message: 'No update fields provided' });
+    }
+
+    // Apply update and append history entries individually so we keep audit trail
+    const reports = await Report.find({ _id: { $in: validIds } }).select('_id history');
+    await Report.updateMany({ _id: { $in: validIds } }, { $set: update });
+    const actionString = historyActionParts.join('; ');
+    const historyEntry = { by: actor.id || actor._id, role: actor.role, action: actionString };
+    // Push history in memory then save each (avoid multi update race for history array)
+    await Promise.all(reports.map(async r => { r.history.push(historyEntry); await r.save(); }));
+
+    return respond(res, { data: { modified: reports.length }, message: 'Bulk update complete' });
+  } catch (err) {
+    console.error('bulkUpdateReports error:', err);
     return respond(res, { success: false, status: 500, message: 'Internal server error' });
   }
 };

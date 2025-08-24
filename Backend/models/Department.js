@@ -13,7 +13,6 @@ const DepartmentSchema = new Schema(
   { timestamps: true }
 );
 
-DepartmentSchema.index({ name: 1 }, { unique: true });
 DepartmentSchema.index({ categories: 1 });
 
 module.exports = mongoose.model('Department', DepartmentSchema);

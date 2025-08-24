@@ -6,7 +6,7 @@ import { Menu, X, ChevronLeft } from 'lucide-react';
 import logo from '../assets/logo.png';
 
 // Elegant, minimal, responsive sidebar
-const SidebarTab = ({ open, setOpen, navItems, isLoaded, user }) => {
+const SidebarTab = ({ open, setOpen, navItems, isLoaded, user, isAdmin }) => {
   const baseItem = 'group relative flex items-center gap-3 rounded-md h-11 px-3 text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/50 transition-colors';
   const accentBar = 'before:content-[""] before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-1 before:rounded-full before:scale-y-0 group-[.active]:before:scale-y-100 before:transition-transform before:origin-top';
 

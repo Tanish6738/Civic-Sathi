@@ -18,7 +18,6 @@ const CategorySchema = new Schema(
   { timestamps: { createdAt: true, updatedAt: false } }
 );
 
-CategorySchema.index({ name: 1 }, { unique: true });
 CategorySchema.index({ keywords: 1 });
 
 module.exports = mongoose.model('Category', CategorySchema);

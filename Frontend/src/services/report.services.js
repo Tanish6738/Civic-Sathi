@@ -33,6 +33,11 @@ export async function updateReport(id, updates) {
   return data.data;
 }
 
+export async function bulkUpdateReports(payload) {
+  const { data } = await api.post('/reports/bulk-update', payload);
+  return data.data;
+}
+
 export async function deleteReport(id) {
   const { data } = await api.delete(`/reports/${id}`);
   return data.data;
@@ -48,6 +53,7 @@ export default {
   getReports,
   getReportById,
   updateReport,
+  bulkUpdateReports,
   deleteReport,
   categorizeReport,
 };
