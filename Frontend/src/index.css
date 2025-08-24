@@ -11,22 +11,6 @@ html {
 /* Body styles now handled in theme.css (uses --ds-bg / --ds-text). Keep typography enhancements here if needed. */
 body { font-feature-settings: "ss01"; }
 
-/* Utility: glass effect */
-.glass {
-	background-color: rgba(255,255,255,0.7);
-	backdrop-filter: saturate(140%) blur(18px);
-	-webkit-backdrop-filter: saturate(140%) blur(18px);
-	border: 1px solid rgba(255,255,255,0.3);
-	box-shadow: 0 4px 10px -2px rgba(0,0,0,.06);
-}
-
-/* Lenis smooth scroll adjustments */
-html.lenis, html.lenis body { height: auto; }
- .lenis.lenis-smooth { scroll-behavior: auto !important; }
- .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
- .lenis.lenis-stopped { overflow: hidden; }
- .lenis.lenis-scrolling iframe { pointer-events: none; }
-
 /* Keyframes for subtle fade & slide */
 @keyframes fade-up { from { opacity:0; transform:translateY(12px);} to {opacity:1; transform:translateY(0);} }
 @keyframes scale-in { from { opacity:0; transform:scale(.94);} to { opacity:1; transform:scale(1);} }

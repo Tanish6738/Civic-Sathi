@@ -78,7 +78,7 @@ export default function StepsTimeline() {
   };
 
   return (
-    <section ref={sectionRef} aria-labelledby="steps-heading" className="w-full bg-gradient-to-b from-white via-[#f6f4ff] to-white py-16 sm:py-20 relative overflow-hidden">
+  <section ref={sectionRef} aria-labelledby="steps-heading" className="w-full bg-white py-16 sm:py-20 relative overflow-hidden">
       <div className="pointer-events-none absolute -top-24 -left-24 w-72 h-72 rounded-full bg-gradient-to-br from-blue-300/30 to-indigo-300/30 blur-3xl" />
       <div className="pointer-events-none absolute bottom-[-140px] right-[-100px] w-96 h-96 rounded-full bg-gradient-to-tr from-orange-200/40 to-pink-200/30 blur-3xl" />
       <div className="relative max-w-6xl mx-auto px-5 sm:px-6">

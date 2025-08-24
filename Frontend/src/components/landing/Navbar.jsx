@@ -80,7 +80,7 @@ export default function Navbar() {
           ref={logoRef}
           whileHover={{ scale: 1.04 }}
           whileTap={{ scale: 0.96 }}
-          className="text-2xl font-extrabold tracking-tight text-purple"
+          className="text-2xl font-extrabold tracking-tight text-purple-700 "
         >
           Nigam Ai
         </motion.h1>
@@ -97,7 +97,7 @@ export default function Navbar() {
           >
             <NavLink
               to={l.to}
-              className={({ isActive }) => `px-3 py-2 rounded-md transition-colors duration-300 inline-flex items-center gap-1 ${isActive ? 'bg-blue-600 text-white shadow-sm' : 'text-white hover:text-white hover:bg-black/50'}`}
+              className={({ isActive }) => `px-3 py-2 rounded-md transition-colors duration-300 inline-flex items-center gap-1 ${isActive ? 'bg-blue-600 text-white shadow-sm' : 'text-purple-500 underline- hover:text-white hover:bg-black/50'}`}
             >
               {l.label}
             </NavLink>

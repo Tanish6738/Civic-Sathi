@@ -41,7 +41,7 @@ const ctaVariants = {
 
 export default function HeroSlider() {
   return (
-    <section className="relative w-full h-[300px] sm:h-[380px] md:h-[460px] lg:h-[78vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-800 via-indigo-800 to-slate-900 text-white">
+  <section className="relative w-full h-[300px] sm:h-[380px] md:h-[460px] lg:h-[78vh] flex items-center justify-center overflow-hidden bg-white text-white">
         {/* Soft radial glow */}
         <video src="./hero1.mp4" autoPlay loop muted className="absolute inset-0 w-full h-full object-cover" />
       </section>

@@ -51,7 +51,7 @@ export default function PartnerSupport() {
     <section
       ref={sectionRef}
       aria-labelledby="partner-support-heading"
-      className="relative w-full bg-gradient-to-b from-white via-white to-blue-50/40 py-20 md:py-28 overflow-hidden"
+      className="relative w-full bg-white py-20 md:py-28 overflow-hidden"
     >
       {/* subtle background accents */}
       <div className="pointer-events-none absolute inset-0 [background:radial-gradient(circle_at_10%_20%,rgba(59,130,246,0.08),transparent_60%),radial-gradient(circle_at_90%_80%,rgba(249,115,22,0.08),transparent_65%)]" />
