@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Menu, X } from 'lucide-react';
+import logo from '../../assets/logo.png';
 gsap.registerPlugin(ScrollTrigger);
 // Central nav list (user scope)
 const BASE_LINKS = [
@@ -45,12 +46,18 @@ export default function Navbar() {
   return (
     <header
       ref={headerRef}
-      className="group sticky top-2 z-50 flex justify-between items-center px-4 sm:px-6 py-3 mx-auto w-[90%] max-w-7xl rounded-2xl bg-white/10 backdrop-blur-2xl saturate-150 shadow-[0_8px_30px_-4px_rgba(0,0,0,0.25)] border border-white/25 ring-1 ring-white/30 relative gap-4 transition-colors duration-300 overflow-hidden supports-[backdrop-filter]:bg-white/10"
+  className="group sticky top-2 z-50 flex justify-between items-center px-4 sm:px-6 py-3 mx-auto w-[90%] max-w-7xl rounded-2xl bg-white/10 backdrop-blur-2xl saturate-150 shadow-[0_8px_30px_-4px_rgba(0,0,0,0.25)] border border-white/25 ring-1 ring-white/30 gap-4 transition-colors duration-300 overflow-hidden supports-[backdrop-filter]:bg-white/10"
     >
       {/* subtle sheen */}
       <span className="pointer-events-none absolute inset-0 before:absolute before:inset-0 before:bg-[linear-gradient(135deg,rgba(255,255,255,0.25)_0%,rgba(255,255,255,0.05)_35%,rgba(255,255,255,0)_60%)] opacity-60 mix-blend-overlay" />
       <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
-        <motion.h1 ref={logoRef} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }} className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-orange-500 text-transparent bg-clip-text drop-shadow-sm">
+        <img src={logo} alt="Logo" className="h-9 w-9 rounded-md object-contain ring-1 ring-black/5" />
+        <motion.h1
+          ref={logoRef}
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.96 }}
+          className="text-2xl font-extrabold tracking-tight text-black"
+        >
           Nigam Ai
         </motion.h1>
       </div>

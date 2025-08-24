@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 
 /*
  ProgressiveForm Component (3-step progressive form)
@@ -32,6 +32,7 @@ export default function ProgressiveForm({
 	onSubmit = () => {},
 	onCancel = () => {}
 }) {
+	// Core state
 	const [step, setStep] = useState(1); // 1 = categories, 2 = subcategories, 3 = details
 	const [categoryId, setCategoryId] = useState(initialCategoryId || '');
 	const [subcategoryLabel, setSubcategoryLabel] = useState(initialSubcategory || '');
@@ -43,25 +44,22 @@ export default function ProgressiveForm({
 	const [manualAddress, setManualAddress] = useState('');
 	const [showModal, setShowModal] = useState(false);
 
-	// Validation helpers
-	const phoneValid = /^\+?[0-9]{10,15}$/.test(phone.trim());
-	const hasLocation = useGeo ? !!geoCoords : manualAddress.trim().length > 3;
+	// Derived / memoized
+	const phoneValid = useMemo(() => /^\+?[0-9]{10,15}$/.test(phone.trim()), [phone]);
+	const hasLocation = useMemo(() => useGeo ? !!geoCoords : manualAddress.trim().length > 3, [useGeo, geoCoords, manualAddress]);
 
-	// Derive selected category object
-	const selectedCategory = data.find(c => c.id === categoryId) || null;
-	const subcategories = selectedCategory?.subcategories || [];
+	const selectedCategory = useMemo(() => data.find(c => c.id === categoryId) || null, [data, categoryId]);
+	const subcategories = useMemo(() => selectedCategory?.subcategories || [], [selectedCategory]);
 
-	// If category changes, clear subcategory
+	// Ensure subcategory remains valid when category changes
 	useEffect(() => {
 		setSubcategoryLabel(prev => {
 			if (!selectedCategory) return '';
-			// Keep if still present
-			if (prev && subcategories.some(s => s.label === prev)) return prev;
-			return '';
+			return subcategories.some(s => s.label === prev) ? prev : '';
 		});
-	}, [categoryId]);
+	}, [categoryId, selectedCategory, subcategories]);
 
-	// If initial props given and valid, auto-advance
+	// Handle initial props
 	useEffect(() => {
 		if (initialCategoryId && data.some(c => c.id === initialCategoryId)) {
 			setCategoryId(initialCategoryId);
@@ -73,8 +71,10 @@ export default function ProgressiveForm({
 	}, [initialCategoryId, initialSubcategory, data]);
 
 	const canGoNext = !!categoryId;
-	const canGoSubNext = !!subcategoryLabel; // move from step2 -> step3
+	const canGoSubNext = !!subcategoryLabel;
 	const canSubmit = phoneValid && hasLocation;
+
+	const progressPercent = useMemo(() => (step / 3) * 100, [step]);
 
 	function handleNext(e) {
 		e.preventDefault();
@@ -88,7 +88,7 @@ export default function ProgressiveForm({
 
 	function handleBack(e) {
 		e.preventDefault();
-		setStep(1);
+		setStep(step === 3 ? 2 : 1);
 	}
 
 	function handleCancel(e) {
@@ -143,215 +143,265 @@ export default function ProgressiveForm({
 	}
 
 	return (
-		<form onSubmit={handleSubmit} className="space-y-6" aria-labelledby="progressive-form-heading">
-			<h2 id="progressive-form-heading" className="text-xl font-semibold text-gray-800">
-				{step === 1 ? 'Select a Category' : step === 2 ? 'Select a Subcategory' : 'Enter Details'}
-			</h2>
+		<form onSubmit={handleSubmit} className="space-y-8" aria-labelledby="progressive-form-heading">
+			{/* Header & Progress */}
+			<div className="space-y-4">
+				<div className="flex items-start justify-between flex-wrap gap-4">
+					<div>
+						<h2 id="progressive-form-heading" className="text-xl font-semibold tracking-tight text-slate-800">
+							{step === 1 ? 'Select a Category' : step === 2 ? 'Choose a Subcategory' : 'Add Your Details'}
+						</h2>
+						<p className="text-xs sm:text-sm text-slate-500 mt-1">Step {step} of 3</p>
+					</div>
+					{selectedCategory && (
+						<div className="text-xs sm:text-sm text-slate-600 bg-slate-50/80 backdrop-blur px-3 py-2 rounded-md border border-slate-200/70 flex flex-col gap-0.5 min-w-[160px]">
+							<span className="truncate"><span className="font-medium">Category:</span> {selectedCategory.label}</span>
+							{subcategoryLabel && <span className="truncate"><span className="font-medium">Sub:</span> {subcategoryLabel}</span>}
+						</div>
+					)}
+				</div>
+				<div className="h-2 rounded-full bg-slate-200 overflow-hidden">
+					<div className="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-indigo-600 transition-all duration-500" style={{ width: `${progressPercent}%` }} />
+				</div>
+				<nav aria-label="Progress" className="hidden md:flex items-center justify-between text-[13px] font-medium text-slate-500">
+					<span className={step >= 1 ? 'text-blue-600' : ''}>Category</span>
+						<span className="h-px flex-1 mx-3 bg-gradient-to-r from-slate-200 via-slate-300 to-slate-200" />
+					<span className={step >= 2 ? 'text-blue-600' : ''}>Subcategory</span>
+						<span className="h-px flex-1 mx-3 bg-gradient-to-r from-slate-200 via-slate-300 to-slate-200" />
+					<span className={step >= 3 ? 'text-blue-600' : ''}>Details</span>
+				</nav>
+			</div>
 
-			{/* Step indicators */}
-			<ol className="flex items-center gap-2 text-sm" aria-label="Steps">
-				<li className={`flex items-center gap-1 ${step === 1 ? 'font-semibold text-blue-600' : 'text-gray-500'}`}>
-					<span className={`inline-flex h-5 w-5 items-center justify-center rounded-full border text-xs ${step >= 1 ? 'bg-blue-600 text-white border-blue-600' : ''}`}>1</span>
-					Category
-				</li>
-				<li className="text-gray-400">→</li>
-				<li className={`flex items-center gap-1 ${step === 2 ? 'font-semibold text-blue-600' : 'text-gray-500'}`}>
-					<span className={`inline-flex h-5 w-5 items-center justify-center rounded-full border text-xs ${step >= 2 ? (step === 2 ? 'bg-blue-600 text-white border-blue-600' : 'bg-blue-600/80 text-white border-blue-600') : ''}`}>2</span>
-					Subcategory
-				</li>
-				<li className="text-gray-400">→</li>
-				<li className={`flex items-center gap-1 ${step === 3 ? 'font-semibold text-blue-600' : 'text-gray-500'}`}>
-					<span className={`inline-flex h-5 w-5 items-center justify-center rounded-full border text-xs ${step === 3 ? 'bg-blue-600 text-white border-blue-600' : ''}`}>3</span>
-					Details
-				</li>
-			</ol>
-
+			{/* Step 1 */}
 			{step === 1 && (
-				<fieldset className="space-y-4" aria-describedby="category-help">
+				<fieldset aria-describedby="category-help" className="space-y-5">
 					<legend className="sr-only">Categories</legend>
-					<p id="category-help" className="text-sm text-gray-600">Choose one category to continue.</p>
-					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+					<p id="category-help" className="text-sm text-slate-600">Pick a category to begin. You can refine it in the next step.</p>
+					<ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 						{data.map(cat => {
 							const checked = categoryId === cat.id;
 							return (
-								<label
-									key={cat.id}
-									htmlFor={`cat-${cat.id}`}
-									className={`relative cursor-pointer rounded-lg border p-4 shadow-sm focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 transition text-sm font-medium flex flex-col gap-1 min-h-[90px] ${checked ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-400'}`}
-								>
-									<span className="flex items-start gap-2">
-										<input
-											id={`cat-${cat.id}`}
-											type="radio"
-											name="category"
-											value={cat.id}
-											checked={checked}
-											onChange={() => setCategoryId(cat.id)}
-											className="mt-1 h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500" />
-										<span className="text-gray-800">{cat.label}</span>
-									</span>
-									<span className="text-xs text-gray-500">{cat.subcategories.length} option{cat.subcategories.length !== 1 && 's'}</span>
-								</label>
+								<li key={cat.id}>
+									<button
+										type="button"
+										onClick={() => setCategoryId(cat.id)}
+										className={[
+											'group w-full text-left rounded-xl border relative overflow-hidden p-4 flex flex-col gap-2',
+											'transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
+											checked ? 'border-blue-600 bg-gradient-to-br from-blue-50 to-indigo-50' : 'border-slate-200 bg-white hover:border-blue-400'
+										].join(' ')}
+										aria-pressed={checked}
+									>
+										<span className="flex items-start gap-2">
+											<span className={[
+												'h-5 w-5 flex items-center justify-center rounded-full border text-[11px] font-medium',
+												checked ? 'bg-blue-600 text-white border-blue-600' : 'border-slate-300 text-slate-500 group-hover:border-blue-400'
+											].join(' ')}>{cat.label[0]}</span>
+											<span className="font-medium text-slate-800 leading-snug pr-2">{cat.label}</span>
+										</span>
+										<span className="text-[11px] tracking-wide uppercase text-slate-500 font-medium">{cat.subcategories.length} option{cat.subcategories.length !== 1 && 's'}</span>
+										{checked && (
+											<span className="absolute inset-0 pointer-events-none border-2 border-blue-500/60 rounded-xl animate-[pulse_2.5s_ease-in-out_infinite]" />
+										)}
+									</button>
+								</li>
 							);
 						})}
-					</div>
+					</ul>
 				</fieldset>
 			)}
 
+			{/* Step 2 */}
 			{step === 2 && selectedCategory && (
-				<fieldset className="space-y-4" aria-describedby="subcategory-help">
+				<fieldset aria-describedby="subcategory-help" className="space-y-5">
 					<legend className="sr-only">Subcategories</legend>
-					<p className="text-sm text-gray-700"><strong>Category:</strong> {selectedCategory.label}</p>
-					<p id="subcategory-help" className="text-sm text-gray-600">Pick a subcategory to submit.</p>
-					<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+					<div className="flex flex-col sm:flex-row sm:items-baseline gap-2 sm:gap-4">
+						<p className="text-sm font-medium text-slate-700">{selectedCategory.label}</p>
+						<p id="subcategory-help" className="text-xs sm:text-sm text-slate-500">Select the most relevant option.</p>
+					</div>
+					<ul className="grid gap-3 sm:grid-cols-2">
 						{subcategories.map(sub => {
 							const checked = subcategoryLabel === sub.label;
 							return (
-								<label
-									key={sub.label}
-									htmlFor={`sub-${sub.label}`}
-									className={`flex items-start gap-2 rounded-md border p-3 cursor-pointer text-sm transition ${checked ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-400'}`}
-								>
-									<input
-										id={`sub-${sub.label}`}
-										type="radio"
-										name="subcategory"
-										value={sub.label}
-										checked={checked}
-										onChange={() => setSubcategoryLabel(sub.label)}
-										className="mt-1 h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500" />
-									<span className="flex-1 text-gray-800">{sub.label}</span>
-								</label>
+								<li key={sub.label}>
+									<button
+										type="button"
+										onClick={() => setSubcategoryLabel(sub.label)}
+										className={[
+											'group w-full rounded-lg border px-4 py-3 text-sm font-medium flex items-start gap-2',
+											'transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500',
+											checked ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm' : 'border-slate-200 bg-white hover:border-indigo-400 hover:bg-slate-50'
+										].join(' ')}
+										aria-pressed={checked}
+									>
+										<span className={[
+											'mt-0.5 h-4 w-4 rounded-full border flex items-center justify-center text-[10px] font-semibold',
+											checked ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 text-slate-400 group-hover:border-indigo-400'
+										].join(' ')}>{checked ? '✓' : ''}</span>
+										<span className="flex-1 text-slate-800 leading-snug">{sub.label}</span>
+									</button>
+								</li>
 							);
 						})}
-					</div>
+					</ul>
 					{subcategories.length === 0 && (
-						<p className="text-sm text-red-600">No subcategories available.</p>
+						<p className="text-sm text-rose-600 bg-rose-50 border border-rose-200 rounded-md px-3 py-2">No subcategories available.</p>
 					)}
 				</fieldset>
 			)}
 
-					{step === 3 && selectedCategory && (
-						<fieldset className="space-y-6" aria-describedby="details-help">
-							<legend className="sr-only">User Details</legend>
-							<p id="details-help" className="text-sm text-gray-600">Provide contact and location information.</p>
-							<div className="space-y-1">
-								<label htmlFor="phone" className="text-sm font-medium text-gray-700">Mobile Number <span className="text-red-500">*</span></label>
-								<input
-									id="phone"
-									type="tel"
-									placeholder="e.g. +919876543210"
-									value={phone}
-									onChange={e => setPhone(e.target.value)}
-									className={`w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${phone && !phoneValid ? 'border-red-400' : 'border-gray-300'}`}
-								/>
-								{phone && !phoneValid && <p className="text-xs text-red-600">Enter a valid phone number (10-15 digits, optional +).</p>}
-							</div>
-							<div className="space-y-3">
-								<p className="text-sm font-medium text-gray-700">Location <span className="text-red-500">*</span></p>
-								<div className="flex flex-wrap gap-2">
-									<button type="button" onClick={() => { setUseGeo(true); triggerGeolocation(); }} className={`inline-flex items-center rounded-md border px-3 py-1.5 text-xs font-medium transition ${useGeo ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}>Use Current Location</button>
-									<button type="button" onClick={() => { setUseGeo(false); setGeoStatus('idle'); }} className={`inline-flex items-center rounded-md border px-3 py-1.5 text-xs font-medium transition ${!useGeo ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}>Enter Manually</button>
-								</div>
-								{useGeo ? (
-									<div className="text-sm">
-										{geoStatus === 'idle' && <p className="text-gray-500">Click to fetch your current coordinates.</p>}
-										{geoStatus === 'pending' && <p className="text-blue-600 animate-pulse">Fetching location...</p>}
-										{geoStatus === 'error' && <p className="text-red-600">{geoError}</p>}
-										{geoStatus === 'success' && geoCoords && (
-											<p className="text-green-700">Latitude: {geoCoords.lat}, Longitude: {geoCoords.lng}</p>
-										)}
-									</div>
-								) : (
-									<div className="space-y-1">
-										<textarea
-											rows={3}
-											placeholder="Enter your address or landmark"
-											value={manualAddress}
-											onChange={e => setManualAddress(e.target.value)}
-											className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-										/>
-										{!manualAddress && <p className="text-xs text-gray-500">Provide sufficient details.</p>}
-									</div>
+			{/* Step 3 */}
+			{step === 3 && selectedCategory && (
+				<fieldset aria-describedby="details-help" className="space-y-8">
+					<legend className="sr-only">User Details</legend>
+					<p id="details-help" className="text-sm text-slate-600">Provide contact & location. We respect your privacy.</p>
+					<div className="grid gap-8 sm:grid-cols-2">
+						<div className="space-y-4 sm:col-span-2">
+							<label htmlFor="phone" className="flex items-center justify-between">
+								<span className="text-sm font-medium text-slate-700">Mobile Number <span className="text-rose-500">*</span></span>
+								{phone && (
+									<span className={`text-xs font-medium ${phoneValid ? 'text-emerald-600' : 'text-rose-600'}`}>{phoneValid ? 'Valid' : 'Invalid'}</span>
 								)}
+							</label>
+							<input
+								id="phone"
+								type="tel"
+								placeholder="e.g. +919876543210"
+								value={phone}
+								onChange={e => setPhone(e.target.value)}
+								className={[
+									'w-full rounded-lg border px-3 py-2.5 text-sm font-medium tracking-wide bg-white/70 backdrop-blur',
+									'placeholder:text-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition',
+									phone && !phoneValid ? 'border-rose-400' : 'border-slate-300'
+								].join(' ')}
+							/>
+							{phone && !phoneValid && <p className="text-xs text-rose-600">10-15 digits, may start with +</p>}
+						</div>
+						<div className="space-y-4 sm:col-span-2">
+							<p className="text-sm font-medium text-slate-700 flex items-center gap-2">Location <span className="text-rose-500">*</span></p>
+							<div className="flex flex-wrap gap-2">
+								<button
+									type="button"
+									onClick={() => { setUseGeo(true); triggerGeolocation(); }}
+									className={[
+										'inline-flex items-center rounded-full border px-4 py-1.5 text-xs font-semibold tracking-wide transition',
+										useGeo ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-white text-slate-700 border-slate-300 hover:border-blue-400'
+									].join(' ')}
+								>Use Current Location</button>
+								<button
+									type="button"
+									onClick={() => { setUseGeo(false); setGeoStatus('idle'); }}
+									className={[
+										'inline-flex items-center rounded-full border px-4 py-1.5 text-xs font-semibold tracking-wide transition',
+										!useGeo ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-white text-slate-700 border-slate-300 hover:border-blue-400'
+									].join(' ')}
+								>Enter Manually</button>
 							</div>
-						</fieldset>
-					)}
+							{useGeo ? (
+								<div className="text-sm rounded-lg border border-slate-200 bg-slate-50/70 px-4 py-3 space-y-1">
+									{geoStatus === 'idle' && <p className="text-slate-500">Tap the button to fetch coordinates.</p>}
+									{geoStatus === 'pending' && <p className="text-blue-600 animate-pulse">Fetching location...</p>}
+									{geoStatus === 'error' && <p className="text-rose-600">{geoError}</p>}
+									{geoStatus === 'success' && geoCoords && (
+										<p className="text-emerald-600 font-medium">Lat: {geoCoords.lat} · Lng: {geoCoords.lng}</p>
+									)}
+								</div>
+							) : (
+								<div className="space-y-3">
+									<textarea
+										rows={4}
+										placeholder="Flat / Street / Landmark / City"
+										value={manualAddress}
+										onChange={e => setManualAddress(e.target.value)}
+										className="w-full rounded-lg border border-slate-300 bg-white/70 backdrop-blur px-3 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+									/>
+									{!manualAddress && <p className="text-xs text-slate-500">Provide enough detail for accurate service.</p>}
+								</div>
+							)}
+						</div>
+					</div>
+				</fieldset>
+			)}
 
-			{/* Action buttons */}
-			<div className="flex flex-wrap gap-3 pt-2">
+			{/* Actions */}
+			<div className="flex flex-wrap items-center gap-3 pt-2">
 				{(step === 2 || step === 3) && (
 					<button
 						type="button"
 						onClick={handleBack}
-						className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-					>
-						Back
-					</button>
+						className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-5 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+					>Back</button>
 				)}
 				{step === 1 && (
 					<button
 						type="button"
 						onClick={handleNext}
 						disabled={!canGoNext}
-						className={`inline-flex items-center rounded-md px-5 py-2 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 ${canGoNext ? 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500' : 'bg-gray-300 text-gray-600 cursor-not-allowed'}`}
-					>
-						Next
-					</button>
+						className={`inline-flex items-center rounded-lg px-6 py-2 text-sm font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-0 ${canGoNext ? 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500' : 'bg-slate-200 text-slate-500 cursor-not-allowed'}`}
+					>Continue</button>
 				)}
 				{step === 2 && (
 					<button
 						type="button"
 						onClick={handleSubNext}
 						disabled={!canGoSubNext}
-						className={`inline-flex items-center rounded-md px-5 py-2 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 ${canGoSubNext ? 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500' : 'bg-gray-300 text-gray-600 cursor-not-allowed'}`}
-					>
-						Next
-					</button>
+						className={`inline-flex items-center rounded-lg px-6 py-2 text-sm font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-0 ${canGoSubNext ? 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500' : 'bg-slate-200 text-slate-500 cursor-not-allowed'}`}
+					>Continue</button>
 				)}
 				{step === 3 && (
 					<button
 						type="submit"
 						disabled={!canSubmit}
-						className={`inline-flex items-center rounded-md px-5 py-2 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 ${canSubmit ? 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500' : 'bg-gray-300 text-gray-600 cursor-not-allowed'}`}
-					>
-						Submit
-					</button>
+						className={`inline-flex items-center rounded-lg px-6 py-2 text-sm font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-0 ${canSubmit ? 'bg-emerald-600 text-white hover:bg-emerald-700 focus:ring-emerald-500' : 'bg-slate-200 text-slate-500 cursor-not-allowed'}`}
+					>Review</button>
 				)}
 				<button
 					type="button"
 					onClick={handleCancel}
-					className="ml-auto inline-flex items-center rounded-md border border-transparent bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-				>
-					Cancel
-				</button>
+					className="ml-auto inline-flex items-center rounded-lg border border-transparent bg-rose-50 px-5 py-2 text-sm font-medium text-rose-700 hover:bg-rose-100 focus:outline-none focus:ring-2 focus:ring-rose-500"
+				>Cancel</button>
 			</div>
 
 			{/* Confirmation Modal */}
 			{showModal && (
 				<div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-					<div className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm" aria-hidden="true" onClick={() => setShowModal(false)} />
-					<div role="dialog" aria-modal="true" className="relative w-full max-w-md rounded-xl bg-white shadow-lg border border-gray-200 p-6 space-y-5">
-						<div className="space-y-1">
-							<h3 className="text-lg font-semibold tracking-tight text-gray-800">Confirm Your Details</h3>
-							<p className="text-xs text-gray-500">Review before making a call with Nigam AI.</p>
+					<div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" aria-hidden="true" onClick={() => setShowModal(false)} />
+					<div role="dialog" aria-modal="true" className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-slate-200">
+						<div className="p-6 space-y-6">
+							<div className="space-y-1">
+								<h3 className="text-lg font-semibold tracking-tight text-slate-800">Review & Confirm</h3>
+								<p className="text-xs text-slate-500">Make sure the details are correct before continuing.</p>
+							</div>
+							<dl className="grid gap-3 text-sm">
+								<div className="flex items-start gap-3">
+									<dt className="w-28 text-slate-500">Category</dt><dd className="flex-1 font-medium text-slate-800">{selectedCategory?.label}</dd>
+								</div>
+								<div className="flex items-start gap-3">
+									<dt className="w-28 text-slate-500">Subcategory</dt><dd className="flex-1 text-slate-800">{subcategoryLabel}</dd>
+								</div>
+								<div className="flex items-start gap-3">
+									<dt className="w-28 text-slate-500">Phone</dt><dd className="flex-1 text-slate-800">{phone.trim()}</dd>
+								</div>
+								<div className="flex items-start gap-3">
+									<dt className="w-28 text-slate-500">Location</dt><dd className="flex-1 text-slate-800">{useGeo ? 'Current Location' : 'Manual Entry'}</dd>
+								</div>
+								{useGeo && geoCoords && (
+									<div className="flex items-start gap-3">
+										<dt className="w-28 text-slate-500">Coordinates</dt><dd className="flex-1 text-slate-800">{geoCoords.lat}, {geoCoords.lng}</dd>
+									</div>
+								)}
+								{!useGeo && manualAddress && (
+									<div className="flex items-start gap-3">
+										<dt className="w-28 text-slate-500">Address</dt><dd className="flex-1 text-slate-800 whitespace-pre-line">{manualAddress.trim()}</dd>
+									</div>
+								)}
+							</dl>
+							<div className="flex gap-3 pt-2">
+								<button type="button" onClick={() => setShowModal(false)} className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-5 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">Edit</button>
+								<button type="button" onClick={confirmSubmit} className="inline-flex items-center rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">Confirm & Continue</button>
+							</div>
 						</div>
-						<ul className="text-sm space-y-2">
-							<li><span className="font-medium text-gray-600">Category:</span> {selectedCategory?.label}</li>
-							<li><span className="font-medium text-gray-600">Subcategory:</span> {subcategoryLabel}</li>
-							<li><span className="font-medium text-gray-600">Phone:</span> {phone.trim()}</li>
-							<li><span className="font-medium text-gray-600">Location Source:</span> {useGeo ? 'Current Location' : 'Manual Entry'}</li>
-							{useGeo && geoCoords && (
-								<li><span className="font-medium text-gray-600">Coordinates:</span> {geoCoords.lat}, {geoCoords.lng}</li>
-							)}
-							{!useGeo && manualAddress && (
-								<li><span className="font-medium text-gray-600">Address:</span> {manualAddress.trim()}</li>
-							)}
-						</ul>
-						<div className="flex gap-3 pt-2">
-							<button type="button" onClick={() => setShowModal(false)} className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">Edit</button>
-							<button type="button" onClick={confirmSubmit} className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Call with Nigam AI</button>
-						</div>
+						<div className="h-1 w-full bg-gradient-to-r from-indigo-500 via-blue-500 to-emerald-500" />
 					</div>
 				</div>
 			)}
