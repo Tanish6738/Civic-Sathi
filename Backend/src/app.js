@@ -16,28 +16,14 @@ const requestId = require('../middleware/requestId');
 const { snapshot } = require('../utils/metrics');
 
 // Explicit CORS configuration so production (Render) always returns headers even on errors
-const allowedOrigins = [
-	'http://localhost:3000',
-	'http://localhost:5173',
-	'http://127.0.0.1:5173',
-	'https://civic-sathi-v2.vercel.app'
-];
 
 const corsOptions = {
-	origin: (origin, cb) => {
-		if (!origin) return cb(null, true); // SSR / curl / same-origin
-		if (allowedOrigins.includes(origin)) return cb(null, true);
-		return cb(null, false); // silently fail (no header) instead of throwing
-	},
+	origin: ("*"),
 	credentials: true,
-	methods: ['GET','HEAD','PUT','PATCH','POST','DELETE','OPTIONS'],
-	allowedHeaders: ['Content-Type','Authorization','x-clerk-id','x-requested-with'],
-	exposedHeaders: ['x-request-id']
-};
+	};
 
 app.use(cors(corsOptions));
 // Ensure preflight responses always sent with correct headers
-app.options('*', cors(corsOptions));
 app.use(requestId);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
