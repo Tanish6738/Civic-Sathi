@@ -79,6 +79,14 @@ const UsersHome = () => {
   const [complaintPath, setComplaintPath] = useState([]); // selected hierarchy
   const [expanded, setExpanded] = useState({});
   const [complaintMode, setComplaintMode] = useState(false);
+  const [showVoicePrep, setShowVoicePrep] = useState(false); // modal visibility
+  // Audio recording (temporary until reload – only kept in memory & navigation state)
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioUrl, setAudioUrl] = useState(null); // object URL or base64 for playback
+  const [audioDuration, setAudioDuration] = useState(0);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const audioBase64Ref = useRef(null); // base64 string (data URL) kept only in memory
   const recognitionRef = useRef(null);
   const navigate = useNavigate();
 
@@ -135,6 +143,7 @@ const UsersHome = () => {
     setTranscript('');
     setManualEdit(false);
     startListening();
+    // Auto-start audio recording (optional) could be triggered here in future
   };
 
   const startComplaint = () => {
@@ -144,14 +153,60 @@ const UsersHome = () => {
 
   const confirmReport = () => {
     stopListening();
-    // Navigate to report page carrying state (service + transcript)
-    navigate('/report', { state: { transcript, service: serviceSelected } });
+  // Navigate to report page carrying state (service + transcript + optional audio)
+  navigate('/report', { state: { transcript, service: serviceSelected, audio: audioBase64Ref.current, audioDuration } });
   };
 
   const retry = () => {
     setTranscript('');
     setManualEdit(false);
     startListening();
+  };
+
+  // --- Audio Recording Logic (MediaRecorder) ---
+  const startRecordingAudio = async () => {
+    if (isRecording) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mr = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+      mr.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+      mr.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const url = URL.createObjectURL(blob);
+        setAudioUrl((prev) => { if (prev) URL.revokeObjectURL(prev); return url; });
+        // derive duration (async via audio element)
+        const tempAudio = new Audio(url);
+        tempAudio.addEventListener('loadedmetadata', () => {
+          setAudioDuration(tempAudio.duration || 0);
+        });
+        // convert to base64 (kept only in memory – lost after reload)
+        const reader = new FileReader();
+        reader.onloadend = () => { audioBase64Ref.current = reader.result; };
+        reader.readAsDataURL(blob);
+      };
+      mr.start();
+      mediaRecorderRef.current = mr;
+      setIsRecording(true);
+    } catch (err) {
+      console.error('Audio permission/record error', err);
+    }
+  };
+
+  const stopRecordingAudio = () => {
+    if (!isRecording || !mediaRecorderRef.current) return;
+    try { mediaRecorderRef.current.stop(); } catch (_) { /* noop */ }
+    mediaRecorderRef.current.stream.getTracks().forEach(t => t.stop());
+    setIsRecording(false);
+  };
+
+  const resetAudio = () => {
+    if (audioUrl) URL.revokeObjectURL(audioUrl);
+    setAudioUrl(null);
+    audioBase64Ref.current = null;
+    setAudioDuration(0);
   };
 
   const ServiceCard = ({ s }) => (
@@ -197,8 +252,10 @@ const UsersHome = () => {
 
             <div className="flex flex-col items-center gap-6 pt-8 pb-16">
               <button
-                onClick={goToVoiceScreen}
-                className="relative w-40 h-40 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center shadow-inner hover:from-blue-200 hover:to-blue-300 transition"
+                onClick={() => setShowVoicePrep(true)}
+                className="relative w-40 h-40 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center shadow-inner hover:from-blue-200 hover:to-blue-300 transition focus:outline-none focus:ring-4 focus:ring-blue-300"
+                aria-haspopup="dialog"
+                aria-controls="voice-prep-modal"
               >
                 <Mic className="w-16 h-16 text-blue-700" />
               </button>
@@ -318,6 +375,34 @@ const UsersHome = () => {
             </button>
           </div>
 
+          {/* Audio Recorder (temporary, in-memory) */}
+          <div className="bg-white p-4 rounded-xl border space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-gray-500">Optional Voice Attachment</p>
+              {audioUrl && (
+                <span className="text-xs text-gray-400">{audioDuration ? audioDuration.toFixed(1) + 's' : ''}</span>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-3 items-center">
+              {!isRecording && (
+                <button onClick={startRecordingAudio} className="px-3 py-2 text-sm rounded-md bg-emerald-600 text-white font-medium hover:bg-emerald-700">Record Audio</button>
+              )}
+              {isRecording && (
+                <button onClick={stopRecordingAudio} className="px-3 py-2 text-sm rounded-md bg-red-600 text-white font-medium animate-pulse">Stop Recording</button>
+              )}
+              {audioUrl && !isRecording && (
+                <>
+                  <audio controls src={audioUrl} className="h-10" />
+                  <button onClick={resetAudio} className="text-xs px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 text-gray-700">Remove</button>
+                </>
+              )}
+              {!audioUrl && !isRecording && (
+                <p className="text-xs text-gray-500">No audio recorded yet.</p>
+              )}
+              <p className="w-full text-[11px] text-gray-400">Audio kept only in memory until you submit or reload the page.</p>
+            </div>
+          </div>
+
           {/* Transcript / Manual Edit */}
           <div className="bg-white p-4 rounded-xl border space-y-3">
             <p className="text-sm font-medium text-gray-500">Detected Text</p>
@@ -377,6 +462,40 @@ const UsersHome = () => {
               <p className="text-xs text-blue-600">Provide your selected category path for faster assistance.</p>
             </div>
           )}
+        </div>
+      )}
+      {/* Voice Preparation Modal */}
+      {showVoicePrep && (
+        <div
+          id="voice-prep-modal"
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        >
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowVoicePrep(false)} />
+          <div className="relative bg-white w-full max-w-md rounded-xl shadow-lg border p-6 space-y-5 animate-fadeIn">
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2"><Mic className="w-5 h-5 text-blue-600" /> Start Voice Report</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                We'll capture your spoken description and (optionally) a short audio clip to attach to your report. Make sure you're in a quiet environment. You can edit the detected text or remove the audio before submitting.
+              </p>
+              <ul className="text-xs text-gray-500 list-disc pl-5 space-y-1">
+                <li>Grant microphone permission when prompted.</li>
+                <li>Recording stays only until you submit or reload.</li>
+                <li>Don’t share sensitive personal data aloud.</li>
+              </ul>
+            </div>
+            <div className="flex flex-wrap gap-3 justify-end pt-2">
+              <button
+                onClick={() => setShowVoicePrep(false)}
+                className="px-4 py-2 text-sm font-medium rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700"
+              >Cancel</button>
+              <button
+                onClick={() => { setShowVoicePrep(false); goToVoiceScreen(); }}
+                className="px-4 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700"
+              >Proceed</button>
+            </div>
+          </div>
         </div>
       )}
     </div>
