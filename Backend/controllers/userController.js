@@ -124,23 +124,36 @@ exports.updateUser = async (req, res) => {
 
     const { id } = req.params;
     if (!id) return respond(res, { success: false, status: 400, message: 'User id is required' });
+    // Load target user first so we can compare existing role
+    const target = await User.findById(id);
+    if (!target) return respond(res, { success: false, status: 404, message: 'User not found' });
 
     const allowed = ['name', 'phone', 'department', 'location'];
     const updates = {};
     for (const key of allowed) {
       if (key in req.body) updates[key] = req.body[key];
     }
+
     if ('role' in req.body) {
-      if (actor.role !== 'superadmin') {
-        return respond(res, { success: false, status: 403, message: 'Only superadmin can change roles' });
+      const incomingRole = req.body.role;
+      if (incomingRole !== target.role) {
+        // Only allow actual role change if actor is superadmin
+        if (actor.role !== 'superadmin') {
+          return respond(res, { success: false, status: 403, message: 'Only superadmin can change roles' });
+        }
+        updates.role = incomingRole;
       }
-      updates.role = req.body.role;
+      // If role is same as current, just ignore silently
     }
 
-    const user = await User.findByIdAndUpdate(id, updates, { new: true });
-    if (!user) return respond(res, { success: false, status: 404, message: 'User not found' });
+    if (Object.keys(updates).length === 0) {
+      return respond(res, { data: target, message: 'No changes applied' });
+    }
 
-    return respond(res, { data: user, message: 'User updated' });
+    Object.assign(target, updates);
+    await target.save();
+
+    return respond(res, { data: target, message: 'User updated' });
   } catch (err) {
     console.error('updateUser error:', err);
     return respond(res, { success: false, status: 500, message: 'Internal server error' });

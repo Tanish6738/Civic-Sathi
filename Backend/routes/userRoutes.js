@@ -3,6 +3,7 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
+const { requireAdmin } = require('../middleware/auth');
 
 // POST /api/users/sync
 router.post('/sync', userController.syncUser);
@@ -13,8 +14,8 @@ router.get('/', userController.listUsers);
 // GET /api/users/:id
 router.get('/:id', userController.getUserById);
 
-// PATCH /api/users/:id
-router.patch('/:id', userController.updateUser);
+// PATCH /api/users/:id (admin/superadmin only)
+router.patch('/:id', requireAdmin, userController.updateUser);
 
 // PUT /api/users/:id/phone
 router.put('/:id/phone', userController.updateUserPhone);

@@ -1,6 +1,6 @@
 'use strict';
 
-import api from '../utils/axios';
+import api, { setClerkId } from '../utils/axios';
 
 // Transform Clerk user object to backend payload
 function clerkToPayload(clerkUser) {
@@ -20,15 +20,18 @@ export async function syncUser(clerkUser) {
   const payload = clerkToPayload(clerkUser);
   if (!payload) throw new Error('Invalid Clerk user');
   const { data } = await api.post('/users/sync', payload);
+  if (payload.clerkId) setClerkId(payload.clerkId);
   return data.data; // { success, data, message }
 }
 
 export async function getUserById(id) {
+  if (id) setClerkId(id); // set header for subsequent requests
   const { data } = await api.get(`/users/${id}`);
   return data.data;
 }
 
 export async function updateUser(id, updates) {
+  console.debug('[updateUser] PATCH /users/' + id, updates);
   const { data } = await api.patch(`/users/${id}`, updates);
   return data.data;
 }

@@ -8,9 +8,14 @@ const actionRoutes = require('../routes/actionRoutes');
 const auditLogRoutes = require('../routes/auditLogRoutes');
 const departmentRoutes = require('../routes/departmentRoutes');
 
+const { attachUser } = require('../middleware/auth');
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Attach user (if header provided)
+app.use(attachUser);
 
 // Routes
 app.use('/api/users', userRoutes);

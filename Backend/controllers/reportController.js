@@ -361,10 +361,26 @@ exports.categorizeReport = async (req, res) => {
     let department = null;
     let officers = [];
     if (categoryDoc) {
-      const dept = await Department.findOne({ categories: categoryDoc._id }).populate('officers', 'name email phone role');
+      const dept = await Department.findOne({ categories: categoryDoc._id })
+        .populate('officers', 'name email phone role status');
       if (dept) {
         department = { id: dept._id, name: dept.name };
-        officers = (dept.officers || []).map(o => ({ id: o._id, name: o.name, email: o.email, phone: o.phone }));
+        // Primary: officers referenced on department (active only if status present)
+        officers = (dept.officers || [])
+          .filter(o => !o.status || o.status === 'active')
+          .map(o => ({ id: o._id, name: o.name, email: o.email, phone: o.phone }));
+        // Fallback / augmentation: add users whose string department matches dept.name and role=officer
+        try {
+          const extra = await User.find({ role: 'officer', department: dept.name, status: 'active' })
+            .select('name email phone');
+          for (const u of extra) {
+            if (!officers.find(x => String(x.id) === String(u._id))) {
+              officers.push({ id: u._id, name: u.name, email: u.email, phone: u.phone });
+            }
+          }
+        } catch (offErr) {
+          console.error('categorizeReport officer augmentation error:', offErr.message);
+        }
       }
     }
     return respond(res, { data: {

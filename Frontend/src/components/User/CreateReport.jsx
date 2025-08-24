@@ -30,7 +30,7 @@ const CreateReport = () => {
   const [photos, setPhotos] = useState([]); // array of { url, name }
   const [photoInput, setPhotoInput] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
-  const [aiResult, setAiResult] = useState(null); // { category, department, officers }
+  const [aiResult, setAiResult] = useState(null); // { category, department, officers, suggestions? }
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [categories, setCategories] = useState([]);
@@ -38,6 +38,12 @@ const CreateReport = () => {
   const [chosenCategoryId, setChosenCategoryId] = useState('');
   const [overrideConfirmed, setOverrideConfirmed] = useState(true);
   const [resetting, setResetting] = useState(false);
+
+  // Debug: log initial mount
+  useEffect(()=>{
+    console.log('[CreateReport] Mounted component');
+    return () => console.log('[CreateReport] Unmounted component');
+  },[]);
 
   // Derived helper to know if there's anything to reset
   const hasDraft = !!(title || description || photos.length || aiResult || chosenCategoryId || stepIdx > 0);
@@ -48,6 +54,7 @@ const CreateReport = () => {
       const raw = localStorage.getItem('report-draft');
       if(raw){
         const d = JSON.parse(raw);
+  console.log('[CreateReport] Loaded draft from localStorage', d);
         if(d.title) setTitle(d.title);
         if(d.description) setDescription(d.description);
         if(Array.isArray(d.photos)) setPhotos(d.photos);
@@ -64,6 +71,11 @@ const CreateReport = () => {
     }, 400);
     return ()=> clearTimeout(t);
   },[title, description, photos, stepIdx, chosenCategoryId]);
+
+  // Log step changes
+  useEffect(()=>{
+    console.log('[CreateReport] Step changed ->', stepIdx, steps[stepIdx]);
+  },[stepIdx]);
 
   // Reset draft helper
   function resetDraft(confirmNeeded = true){
@@ -107,15 +119,21 @@ const CreateReport = () => {
   async function runCategorize() {
     if (!validateDetails()) return;
     setAiLoading(true); setAiResult(null); setError('');
+    console.log('[CreateReport] Running AI categorization', { descriptionLength: description.trim().length });
     try {
-      const res = await categorizeReport(description.trim());
+      const res = await categorizeReport(description.trim()); // expects backend may now include suggestions + all officers
       setAiResult(res);
+      console.log('[CreateReport] AI result received', res);
+      if(res?.suggestions){
+        console.log('[CreateReport] Suggestions received', res.suggestions);
+      }
       if(res?.category?.id){
         setChosenCategoryId(res.category.id);
         setOverrideConfirmed(true);
       }
       next(); // move to officers step automatically
     } catch (e) {
+      console.log('[CreateReport] AI categorization error', e);
       const msg = e?.response?.data?.message || 'AI categorization failed';
       setError(msg); notify(msg, 'error');
     } finally { setAiLoading(false); }
@@ -126,6 +144,14 @@ const CreateReport = () => {
     if (!chosenCategoryId) { setError('Please select a category.'); return; }
     if (chosenCategoryId !== aiResult.category.id && !overrideConfirmed) { setError('Please confirm category override.'); return; }
     setSubmitting(true); setError('');
+    console.log('[CreateReport] Submitting report', {
+      titleLength: title.trim().length,
+      descriptionLength: description.trim().length,
+      photosCount: photos.length,
+      chosenCategoryId,
+      aiCategoryId: aiResult.category.id,
+      override: chosenCategoryId !== aiResult.category.id
+    });
     try {
       const payload = {
         title: title.trim(),
@@ -134,11 +160,13 @@ const CreateReport = () => {
         reporterId: user.publicMetadata?.mongoId || user.id,
         photosBefore: photos.map(p => ({ url: p.url }))
       };
+      console.log('[CreateReport] Payload prepared (sanitized)', { ...payload, description: undefined });
       await createReport(payload);
       notify('Report created', 'success');
       try { localStorage.removeItem('report-draft'); } catch(_){ }
       navigate('/user/reports');
     } catch (e) {
+      console.log('[CreateReport] Submission error', e);
       const msg = e?.response?.data?.message || 'Failed to create report';
       setError(msg); notify(msg, 'error');
     } finally { setSubmitting(false); }
@@ -275,6 +303,27 @@ const CreateReport = () => {
             <div className="text-xs text-gray-700">Category: <span className="font-medium text-indigo-600">{aiResult.category?.name || 'Unknown'}</span></div>
             <div className="text-xs text-gray-700">Department: <span className="font-medium">{aiResult.department?.name || '—'}</span></div>
           </div>
+          {aiResult.suggestions && aiResult.suggestions.length > 1 && (
+            <div className="space-y-2">
+              <div className="text-xs font-medium text-gray-700">Other Suggested Categories</div>
+              <ul className="space-y-1 bg-white/70 border border-gray-200 rounded-md p-2 max-h-40 overflow-y-auto">
+                {aiResult.suggestions.map(s => (
+                  <li key={s.id || s.name} className="flex items-center gap-2 text-[11px]">
+                    <input
+                      type="radio"
+                      name="suggestedCategory"
+                      value={s.id || ''}
+                      checked={chosenCategoryId === (s.id || '')}
+                      onChange={() => { setChosenCategoryId(s.id || ''); setOverrideConfirmed(true); }}
+                      className="h-3 w-3 text-indigo-600"
+                    />
+                    <span className="flex-1 truncate {chosenCategoryId === (s.id||'') ? 'font-semibold text-indigo-600' : ''}">{s.name}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="text-[10px] text-gray-500">Select a category above if different from the primary.</div>
+            </div>
+          )}
           <div className="space-y-2">
             <label className="text-xs font-medium text-gray-700">Override Category (optional)</label>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -290,10 +339,16 @@ const CreateReport = () => {
                 <button type="button" onClick={()=> setOverrideConfirmed(true)} className="px-2 h-7 rounded bg-amber-600 text-white text-[10px] font-medium">Confirm Override</button>
               </div>
             )}
+            {chosenCategoryId && chosenCategoryId !== (aiResult.category?.id||'') && overrideConfirmed && (
+              <div className="text-[10px] text-amber-600">Override confirmed.</div>
+            )}
           </div>
           <div className="space-y-2">
             <h4 className="text-xs font-medium text-gray-700">Officer Contacts</h4>
             <OfficerContacts officers={aiResult.officers || []} />
+            {(!aiResult.officers || aiResult.officers.length === 0) && (
+              <div className="text-[10px] text-gray-500">No officers found for this category yet.</div>
+            )}
           </div>
           <div className="flex gap-3 pt-2">
             <button onClick={next} className="px-4 h-10 rounded-md bg-indigo-600 text-white text-sm font-medium">Looks Good</button>

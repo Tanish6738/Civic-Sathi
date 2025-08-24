@@ -3,11 +3,11 @@ import { useUser } from '@clerk/clerk-react';
 import { Mail, ShieldCheck, LockKeyhole, KeyRound, CalendarClock, Hash, Copy, UserCircle, FileText, ArrowRight, Phone, Building2, Save } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getUserById, updateUser } from '../../services/user.services';
+import { getReports } from '../../services/report.services';
 import { useToast } from '../../contexts/ToastContext';
 import { useDbUser } from '../../contexts/UserContext';
 
-const STORAGE_KEY = 'reports';
-const loadReports = () => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; } };
+// Remote reports are fetched via API; fallback local storage removed.
 
 const Profile = () => {
   const { isLoaded, user } = useUser();
@@ -15,7 +15,7 @@ const Profile = () => {
   const { notify } = useToast();
   const [loadingDb, setLoadingDb] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ name: '', phone: '', department: '' });
+  const [form, setForm] = useState({ name: '', phone: '' }); // department is read-only now
   const [message, setMessage] = useState(null);
 
   // Fetch the user document if we have clerk user but no dbUser loaded yet
@@ -38,7 +38,7 @@ const Profile = () => {
   // Initialize form when dbUser changes
   useEffect(() => {
     if (dbUser) {
-      setForm({ name: dbUser.name || '', phone: dbUser.phone || '', department: dbUser.department || '' });
+      setForm({ name: dbUser.name || '', phone: dbUser.phone || '' });
     }
   }, [dbUser]);
 
@@ -52,7 +52,8 @@ const Profile = () => {
     if (!dbUser?._id) return;
     setSaving(true); setMessage(null);
     try {
-      const updated = await updateUser(dbUser._id, form);
+  // Only send editable fields (name, phone). Department changes are reserved for admins.
+  const updated = await updateUser(dbUser._id, { name: form.name, phone: form.phone });
       setDbUser(updated);
   notify('Profile updated', 'success');
       setMessage({ type: 'success', text: 'Profile updated.' });
@@ -104,8 +105,29 @@ const Profile = () => {
   };
 
   const [reports, setReports] = useState([]);
-  useEffect(()=>{ setReports(loadReports()); },[]);
-  const myReports = useMemo(()=> reports.filter(r=>r.userId===user.id).sort((a,b)=> new Date(b.createdAt)-new Date(a.createdAt)).slice(0,5),[reports,user.id]);
+  const [reportsLoading, setReportsLoading] = useState(false);
+  const [reportsError, setReportsError] = useState('');
+
+  // Fetch user's recent reports from backend
+  useEffect(()=>{
+    let cancelled = false;
+    async function loadReports(){
+      if(!dbUser?._id) return; // wait for db user
+      setReportsLoading(true); setReportsError('');
+      try {
+        const res = await getReports({ reporter: dbUser._id, limit: 5 });
+        const items = res.items || res || [];
+        if(!cancelled) setReports(items);
+      } catch(e){ if(!cancelled) setReportsError(e?.response?.data?.message || 'Failed to load reports'); }
+      finally { if(!cancelled) setReportsLoading(false); }
+    }
+    loadReports();
+    return () => { cancelled = true; };
+  }, [dbUser]);
+
+  const myReports = useMemo(()=> (reports || []).slice(0,5),[reports]);
+
+  // Department list not needed; department is assigned by admin and read-only here.
 
   const statusClasses = {
     Pending: 'bg-amber-100 text-amber-700 ring-amber-300',
@@ -183,8 +205,8 @@ const Profile = () => {
             <input name="phone" value={form.phone} onChange={onChange} disabled={saving} className="h-11 w-full rounded-lg border border-gray-300 bg-white/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/60" placeholder="Phone" />
           </div>
             <div className="space-y-2">
-              <label className="text-xs font-medium text-gray-600 flex items-center gap-1"><Building2 size={12}/> Department</label>
-              <input name="department" value={form.department} onChange={onChange} disabled={saving} className="h-11 w-full rounded-lg border border-gray-300 bg-white/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/60" placeholder="Department" />
+              <label className="text-xs font-medium text-gray-600 flex items-center gap-1"><Building2 size={12}/> Department (Assigned)</label>
+              <input value={dbUser?.department || ''} disabled className="h-11 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-700" placeholder="Not Assigned" />
             </div>
             <div className="md:col-span-3 flex flex-col sm:flex-row items-start sm:items-center gap-3 pt-2">
               <button type="submit" disabled={saving || loadingDb || !dbUser?._id} className="inline-flex items-center gap-2 bg-indigo-600 text-white h-11 px-5 rounded-lg text-sm font-medium shadow hover:bg-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed active:scale-95 transition">
@@ -203,22 +225,28 @@ const Profile = () => {
           <h2 className="text-lg font-semibold tracking-tight flex items-center gap-2"><FileText size={18}/> Recent Reports</h2>
       <Link to="/user/reports" className="inline-flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-500">View All <ArrowRight size={14} /></Link>
         </div>
-        {myReports.length === 0 ? (
+        {reportsLoading && (
+          <div className="text-sm text-gray-500 bg-white/70 backdrop-blur p-6 rounded-xl border border-gray-200">Loading reports...</div>
+        )}
+        {!reportsLoading && reportsError && (
+          <div className="text-sm text-rose-600 bg-white/70 backdrop-blur p-6 rounded-xl border border-gray-200">{reportsError}</div>
+        )}
+        {!reportsLoading && !reportsError && myReports.length === 0 ? (
           <div className="text-sm text-gray-500 bg-white/70 backdrop-blur p-6 rounded-xl border border-gray-200">No reports submitted yet.</div>
-        ) : (
+        ) : !reportsLoading && !reportsError && (
           <ul className="space-y-3">
             {myReports.map(r => (
-              <li key={r.id} className="group rounded-lg border border-gray-200 bg-white/70 backdrop-blur-sm p-4 flex flex-col gap-2 hover:shadow-sm transition relative overflow-hidden">
+              <li key={r._id || r.id} className="group rounded-lg border border-gray-200 bg-white/70 backdrop-blur-sm p-4 flex flex-col gap-2 hover:shadow-sm transition relative overflow-hidden">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="font-medium text-gray-900 truncate" title={r.title}>{r.title}</p>
-                    <p className="text-xs text-gray-500 flex items-center gap-1"><CalendarClock size={12}/> {new Date(r.createdAt).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'})}</p>
+                    <p className="text-xs text-gray-500 flex items-center gap-1"><CalendarClock size={12}/> {r.createdAt ? new Date(r.createdAt).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'}) : '—'}</p>
                   </div>
                   <span className={`text-[10px] font-semibold tracking-wide px-2 py-1 rounded-md ring-1 ${statusClasses[r.status] || 'bg-gray-100 text-gray-600 ring-gray-300'}`}>{r.status}</span>
                 </div>
                 <p className="text-sm text-gray-600 line-clamp-2">{r.description}</p>
                 <div className="flex flex-wrap gap-2 text-[10px] font-medium uppercase tracking-wide">
-                  <span className="px-2 py-1 rounded-md bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200">{r.category}</span>
+                  <span className="px-2 py-1 rounded-md bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200">{typeof r.category === 'object' ? r.category?.name : r.category}</span>
                   {r.location && <span className="px-2 py-1 rounded-md bg-gray-100 text-gray-700 ring-1 ring-gray-300">{r.location}</span>}
                 </div>
               </li>
