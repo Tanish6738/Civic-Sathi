@@ -44,12 +44,15 @@ const ReportSchema = new Schema(
         'in_progress',
         'awaiting_verification',
         'verified',
-  'closed',
-  'deleted'
+        'closed',
+        'misrouted',
+        'deleted'
       ],
       default: 'draft',
       index: true
     },
+    // Optional reason captured when an officer marks misrouted.
+    misrouteReason: { type: String, trim: true, maxlength: 500 },
     photosBefore: [PhotoSchema],
     photosAfter: [PhotoSchema],
     history: [HistoryEntrySchema]
@@ -61,5 +64,7 @@ const ReportSchema = new Schema(
 ReportSchema.index({ status: 1, category: 1 });
 ReportSchema.index({ reporter: 1, createdAt: -1 });
 ReportSchema.index({ assignedTo: 1, status: 1 });
+// Composite for officer dashboard sorting by recent updates
+ReportSchema.index({ assignedTo: 1, status: 1, updatedAt: -1 });
 
 module.exports = mongoose.model('Report', ReportSchema);

@@ -6,7 +6,10 @@
     "dev": "nodemon server.js",
     "start": "node server.js",
     "seed:departments": "node seed/seedDepartmentsAndCategories.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "test": "echo \"Error: no test specified\" && exit 1",
+  "verify:phase2": "node scripts/phase2-verify.js",
+  "verify:phase3-4": "node scripts/phase3-4-verify.js",
+  "verify:phase5": "node scripts/phase5-verify.js"
   },
   "keywords": [],
   "author": "",

@@ -15,6 +15,10 @@ import AllReports from "../components/Admin/Reports/AllReports";
 import MyReports from "../components/User/profile/MyReports";
 import Layout from "../components/Layout";
 import AuditLogList from "../components/Admin/AuditLogList";
+import ReactLazy from 'react';
+const OfficerDashboard = React.lazy(()=> import('../components/Officier/OfficerDashboard'));
+const OfficerReportsList = React.lazy(()=> import('../components/Officier/OfficerReportsList'));
+const OfficerReportHistory = React.lazy(()=> import('../components/Officier/OfficerReportHistory'));
 import DepartmentsHome from "../components/User/DepartmentsHome";
 import DepartmentDetail from "../components/User/DepartmentDetail";
 import { UserProvider } from "../contexts/UserContext";
@@ -26,6 +30,13 @@ const RequireAdmin = ({ children }) => {
   const isAdmin =
     !!email && Array.isArray(adminEmails) && adminEmails.includes(email);
   return isAdmin ? children : <Navigate to="/" replace />;
+};
+
+// Officer-only guard: must have backend role=officer (admins explicitly blocked)
+const RequireOfficer = ({ children, dbUser }) => {
+  if (!dbUser) return null;
+  if (dbUser.role !== 'officer') return <Navigate to="/" replace />;
+  return children;
 };
 
 // Generic protection: any non-root route requires sign-in. Falls back to landing page.
@@ -70,6 +81,19 @@ const AppRoutes = () => {
   return (
     <UserProvider initialUser={dbUser}>
       <Routes>
+        {/* Officer exclusive routes (admins NOT allowed) */}
+        <Route
+          path="/officer"
+          element={<ProtectedRoute>{withLayout(<React.Suspense fallback={<div className='p-6 text-sm text-soft/60'>Loading officer dashboard...</div>}><RequireOfficer dbUser={dbUser}><OfficerDashboard /></RequireOfficer></React.Suspense>)}</ProtectedRoute>}
+        />
+        <Route
+          path="/officer/reports"
+          element={<ProtectedRoute>{withLayout(<React.Suspense fallback={<div className='p-6 text-sm text-soft/60'>Loading assignments...</div>}><RequireOfficer dbUser={dbUser}><OfficerReportsList /></RequireOfficer></React.Suspense>)}</ProtectedRoute>}
+        />
+        <Route
+          path="/officer/history"
+          element={<ProtectedRoute>{withLayout(<React.Suspense fallback={<div className='p-6 text-sm text-soft/60'>Loading history...</div>}><RequireOfficer dbUser={dbUser}><OfficerReportHistory /></RequireOfficer></React.Suspense>)}</ProtectedRoute>}
+        />
         <Route path="/" element={<Landing />} />
         <Route
           path="/user/profile"

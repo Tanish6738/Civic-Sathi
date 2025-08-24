@@ -19,6 +19,13 @@ import { useDbUser } from "../contexts/UserContext";
 import { getUserById } from "../services/user.services";
 import { Footer } from "./landing";
 
+class ErrorBoundary extends React.Component {
+  constructor(props){ super(props); this.state = { hasError: false }; }
+  static getDerivedStateFromError(){ return { hasError: true }; }
+  componentDidCatch(err, info){ console.error('UI ErrorBoundary', err, info); }
+  render(){ if (this.state.hasError) return <div className="p-6 text-sm text-danger">Something went wrong.</div>; return this.props.children; }
+}
+
 // Base (non-admin) navigation items
 const NAV = [
   { to: "/report/new", label: "New Report", icon: BarChart3 },
@@ -38,15 +45,23 @@ const Layout = ({ children }) => {
   const email = user?.primaryEmailAddress?.emailAddress;
   const isAdmin =
     !!email && Array.isArray(adminEmails) && adminEmails.includes(email);
-  const navItems = isAdmin
+  // Access backend role for officer-specific menu
+  const { dbUser, setDbUser } = useDbUser ? useDbUser() : { dbUser: null, setDbUser: () => {} };
+  const isOfficer = dbUser?.role === 'officer';
+  const navItems = isOfficer
     ? [
+        { to: "/officer", label: "Officer", icon: Shield },
+        { to: "/officer/reports", label: "Assignments", icon: ListChecks },
+        { to: "/officer/history", label: "History", icon: History },
+        ...NAV,
+      ]
+    : (isAdmin ? [
         ...NAV,
         { to: "/users", label: "Users", icon: Users },
         { to: "/admin", label: "Admin", icon: Shield },
         { to: "/admin/reports", label: "All Reports", icon: ListChecks },
         { to: "/audit-logs", label: "Audit Logs", icon: History },
-      ]
-    : NAV;
+      ] : NAV);
 
   // Persist sidebar state between reloads
   useEffect(() => {
@@ -58,9 +73,7 @@ const Layout = ({ children }) => {
   }, [open]);
 
   // Access backend user (dbUser) from context if provided by parent; if not present, attempt fetch by clerkId.
-  const { dbUser, setDbUser } = useDbUser
-    ? useDbUser()
-    : { dbUser: null, setDbUser: () => {} };
+  // dbUser already destructured above
   const needsPhone =
     !!user && (!dbUser || !dbUser.phone || !/^[0-9]{10}$/.test(dbUser.phone));
 
@@ -96,10 +109,8 @@ const Layout = ({ children }) => {
         />
         <div className="flex-1 flex flex-col min-h-screen md:pl-0 relative">
           <Navbar open={open} setOpen={setOpen} isAdmin={isAdmin} />
-          <main
-            className={`flex-1 p-4 md:p-6 ${needsPhone ? "pointer-events-none select-none blur-sm" : ""}`}
-          >
-            {children}
+          <main className={`flex-1 p-4 md:p-6 ${needsPhone ? "pointer-events-none select-none blur-sm" : ""}`}>
+            <ErrorBoundary>{children}</ErrorBoundary>
           </main>
           {needsPhone && dbUser && (
             <PhoneModal

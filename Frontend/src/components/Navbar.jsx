@@ -6,12 +6,16 @@ import SignOutButton from './SignOutButton';
 import { motion, AnimatePresence } from 'framer-motion';
 import logo from '../assets/logo.png';
 import { useTheme } from '../contexts/ThemeContext';
+import { useDbUser } from '../contexts/UserContext';
 
 // Professional, minimal & responsive top navigation bar
 const Navbar = ({ open, setOpen, isAdmin }) => {
   const hasSidebar = typeof setOpen === 'function';
   const { theme, toggleTheme } = useTheme();
   // Removed GSAP entrance animation to prevent inline transform/opacity styles from being injected
+
+  const { dbUser } = useDbUser();
+  const isOfficer = dbUser?.role === 'officer';
 
   // Central nav configuration (only key, label, to, icon)
   const location = useLocation();
@@ -27,6 +31,15 @@ const Navbar = ({ open, setOpen, isAdmin }) => {
           { key: 'my-reports', label: 'My Reports', to: '/user/reports', icon: FileText },
         ]
       },
+      ...(isOfficer ? [{
+        key: 'officer',
+        label: 'Officer',
+        items: [
+          { key: 'officer-dashboard', label: 'Dashboard', to: '/officer', icon: Shield },
+          { key: 'officer-assignments', label: 'Assignments', to: '/officer/reports', icon: ListChecks },
+          { key: 'officer-history', label: 'History', to: '/officer/history', icon: History },
+        ]
+      }] : []),
       {
         key: 'services',
         label: 'Services',
@@ -43,7 +56,7 @@ const Navbar = ({ open, setOpen, isAdmin }) => {
         ]
       }
     ];
-    if (isAdmin) {
+    if (isAdmin && !isOfficer) {
       g.push({
         key: 'admin',
         label: 'Administration',
@@ -56,7 +69,7 @@ const Navbar = ({ open, setOpen, isAdmin }) => {
       });
     }
     return g;
-  }, [isAdmin]);
+  }, [isAdmin, isOfficer]);
 
   const linkBase = 'relative inline-flex items-center gap-1 px-3 h-9 rounded-md text-sm font-medium border-b-2 border-transparent transition-colors duration-200 isolate';
 

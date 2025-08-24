@@ -34,4 +34,17 @@ function requireAdmin(req, res, next) {
   return next();
 }
 
-module.exports = { attachUser, requireAdmin };
+// Generic role guard: any of the provided roles, or 403.
+function requireRole(...roles) {
+  return function (req, res, next) {
+    if (!req.user) {
+      return res.status(401).json({ success: false, data: null, message: 'Unauthorized' });
+    }
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ success: false, data: null, message: 'Forbidden' });
+    }
+    return next();
+  };
+}
+
+module.exports = { attachUser, requireAdmin, requireRole };

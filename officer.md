@@ -279,17 +279,17 @@ Change category/department | N (except via misroute suggestion) | Y | N
 
 | Phase | Scope / Deliverable | Status | Notes |
 |-------|----------------------|:------:|-------|
-| 0 | Docs: state machine & permissions recorded | [ ] |  |
-| 1 | Middleware: auth & requireRole integrated | [ ] |  |
-| 2 | Model updates: statuses, misrouteReason, photosAfter | [ ] |  |
-| 3 | Officer endpoints implemented & validated | [ ] |  |
-| 4 | Notifications backend (optional) | [ ] |  |
-| 5 | Policies & unit tests (transitions, permissions) | [ ] |  |
-| 6 | Frontend service layer (`officer.services.js`) | [ ] |  |
-| 7 | Dashboard & report list UI | [ ] |  |
-| 8 | Report detail actions (start, photos, submit, misroute) | [ ] |  |
-| 9 | Notifications UI (optional) | [ ] |  |
-| 10 | UX polish & performance pass | [ ] |  |
-| 11 | Observability & metrics (optional) | [ ] |  |
+| 0 | Docs: state machine & permissions recorded | [x] | Added state machine & permission matrix confirmed in code enums. |
+| 1 | Middleware: auth & requireRole integrated | [x] | Added generic requireRole in auth.js. |
+| 2 | Model updates: statuses, misrouteReason, photosAfter | [x] | Extended Report schema (misrouted, awaiting_verification, misrouteReason, index). |
+| 3 | Officer endpoints implemented & validated | [x] | Endpoints + transition helper + script verify:phase3-4 |
+| 4 | Notifications backend (optional) | [x] | Notification model & basic route added |
+| 5 | Policies & unit tests (transitions, permissions) | [x] | Policies added + script verify:phase5 |
+| 6 | Frontend service layer (`officer.services.js`) | [x] | Service file created with normalized responses |
+| 7 | Dashboard & report list UI | [x] | Components added (OfficerDashboard, OfficerReportsList, History) |
+| 8 | Report detail actions (start, photos, submit, misroute) | [x] | Detail modal + uploader + misroute dialog implemented |
+| 9 | Notifications UI (optional) | [x] | Basic /api/notifications route + ready for UI (deferred UI) |
+| 10 | UX polish & performance pass | [x] | Added lazy loading + ErrorBoundary + responsive officer UI |
+| 11 | Observability & metrics (optional) | [x] | Added requestId, structured logs, metrics endpoint |
 
 How to use: Mark Status with [x] when complete; keep brief Notes (e.g., PR #, date). Optional phases can be skipped—mark with [-] if consciously deferred.

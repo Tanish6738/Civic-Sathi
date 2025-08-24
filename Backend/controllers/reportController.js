@@ -6,25 +6,15 @@ const Category = require('../models/Category');
 const mongoose = require('mongoose');
 const { categorizeReportAI } = require('../utils/aiCategorizer');
 const Department = require('../models/Department');
+const { applyStatusTransition, normalizePhotos } = require('../utils/reportUtils');
+const { canModifyReport } = require('../policies/reportPolicies');
 
 // Consistent response helper
 function respond(res, { success = true, status = 200, data = null, message = '' }) {
   return res.status(status).json({ success, data, message });
 }
 
-// Helper to normalize array of photo urls/objects to schema shape
-function normalizePhotos(arr) {
-  if (!arr) return [];
-  if (!Array.isArray(arr)) arr = [arr];
-  return arr
-    .map(p => {
-      if (!p) return null;
-      if (typeof p === 'string') return { url: p.trim() };
-      if (p.url) return { url: String(p.url).trim(), meta: p.meta };
-      return null;
-    })
-    .filter(Boolean);
-}
+// normalizePhotos now imported from utils/reportUtils
 
 // POST /api/reports
 // Create a new report
@@ -84,18 +74,93 @@ exports.createReport = async (req, res) => {
       action: 'created'
     };
 
+    // Attempt department inference if not explicitly provided
+    let deptDoc = null;
+    let deptName = department || null;
+    if (!deptName && category) {
+      try {
+        deptDoc = await Department.findOne({ categories: category._id }).populate('officers', 'role status name email');
+        if (deptDoc) deptName = deptDoc.name;
+      } catch (e) {
+        console.error('Department lookup by category failed:', e.message);
+      }
+    } else if (deptName) {
+      try {
+        deptDoc = await Department.findOne({ name: deptName }).populate('officers', 'role status name email');
+      } catch (e) {
+        console.error('Department lookup by name failed:', e.message);
+      }
+    }
+
+    // Auto-assignment logic
+    let chosenOfficerId = null;
+    let chosenOfficerName = null;
+    if (deptDoc) {
+      try {
+        // Collect candidate active officers (role=officer, status active)
+        const direct = (deptDoc.officers || []).filter(o => o && o.role === 'officer' && (!o.status || o.status === 'active'));
+        // Augment with officers whose user.department string matches
+        let extra = [];
+        if (deptDoc.name) {
+          extra = await User.find({ role: 'officer', department: deptDoc.name, status: 'active' }).select('role status name email');
+        }
+        const candidatesMap = new Map();
+        for (const o of direct) candidatesMap.set(String(o._id), o);
+        for (const o of extra) if (!candidatesMap.has(String(o._id))) candidatesMap.set(String(o._id), o);
+        const candidates = Array.from(candidatesMap.values());
+        if (candidates.length) {
+          const candidateIds = candidates.map(c => c._id);
+          // Aggregate open workload counts
+          const openStatuses = ['assigned','in_progress','awaiting_verification'];
+            const agg = await Report.aggregate([
+            { $match: { assignedTo: { $in: candidateIds }, status: { $in: openStatuses } } },
+            { $unwind: '$assignedTo' },
+            { $match: { assignedTo: { $in: candidateIds } } },
+            { $group: { _id: '$assignedTo', count: { $sum: 1 } } }
+          ]);
+          const loadMap = new Map(agg.map(a => [String(a._id), a.count]));
+          let best = null;
+          for (const c of candidates) {
+            const load = loadMap.get(String(c._id)) || 0;
+            if (!best || load < best.load) {
+              best = { id: c._id, name: c.name || c.email || 'officer', load };
+            }
+          }
+          if (best) {
+            chosenOfficerId = best.id;
+            chosenOfficerName = best.name;
+          }
+        }
+      } catch (e) {
+        console.error('Auto-assignment failed:', e.message);
+      }
+    }
+
+    const initialStatus = chosenOfficerId ? 'assigned' : 'submitted';
+    if (chosenOfficerId) {
+      // annotate creation action
+      historyEntry.action = 'created (auto-assigned)';
+    }
+
     const report = await Report.create({
       title: title.trim(),
       description: description.trim(),
-      department: department || undefined,
-  category: category ? category._id : undefined,
+      department: deptName || undefined,
+      category: category ? category._id : undefined,
       reporter: reporter._id,
       photosBefore: photosBeforeNormalized,
-      status: 'submitted',
+      status: initialStatus,
+      assignedTo: chosenOfficerId ? [chosenOfficerId] : [],
       history: [historyEntry]
     });
 
-    return respond(res, { data: report, message: 'Report created' });
+    if (chosenOfficerId) {
+      // push separate history entry representing officer's implicit receipt
+      report.history.push({ by: chosenOfficerId, role: 'officer', action: `auto-assigned (load-balanced)` });
+      await report.save();
+    }
+
+    return respond(res, { data: report, message: chosenOfficerId ? `Report created and auto-assigned to ${chosenOfficerName}` : 'Report created' });
   } catch (err) {
     console.error('createReport error:', err);
     return respond(res, { success: false, status: 500, message: 'Internal server error' });
@@ -281,23 +346,33 @@ exports.updateReport = async (req, res) => {
     const { id } = req.params;
     if (!id) return respond(res, { success: false, status: 400, message: 'Report id required' });
 
-    const report = await Report.findById(id);
+  const report = await Report.findById(id);
     if (!report) return respond(res, { success: false, status: 404, message: 'Report not found' });
 
     const {
       title,
       description,
-      status,
+      status: targetStatus,
       photosAfter,
       assignedTo, // array of user ids
       categoryId,
       action, // free-text description of this update for history
-      byUserId // user performing update
+      byUserId // user performing update or will fallback to req.user
     } = req.body || {};
+
+    const actor = req.user || (byUserId ? { id: byUserId, role: 'reporter' } : null);
+    if (actor && !canModifyReport(actor, report)) {
+      return respond(res, { success: false, status: 403, message: 'Forbidden' });
+    }
 
     if (title) report.title = title.trim();
     if (description) report.description = description.trim();
-    if (status) report.status = status; // TODO: validate status transitions
+    if (targetStatus) {
+      const tr = await applyStatusTransition(report, targetStatus, actor || { role: 'reporter', id: report.reporter });
+      if (!tr.ok) {
+        return respond(res, { success: false, status: 409, message: tr.error });
+      }
+    }
     if (categoryId) report.category = categoryId;
     if (Array.isArray(assignedTo)) report.assignedTo = assignedTo;
     if (photosAfter) {
@@ -305,16 +380,17 @@ exports.updateReport = async (req, res) => {
       report.photosAfter = [...(report.photosAfter || []), ...normalizedAfter];
     }
 
-    if (byUserId && action) {
+    if ((byUserId || actor) && action) {
       // Resolve byUserId (could be clerkId)
       let actorId = null;
       let role = 'reporter';
-      if (mongoose.Types.ObjectId.isValid(byUserId)) {
-        const u = await User.findById(byUserId).select('_id role');
+      const candidate = byUserId || actor.id || actor._id;
+      if (mongoose.Types.ObjectId.isValid(candidate)) {
+        const u = await User.findById(candidate).select('_id role');
         if (u) { actorId = u._id; role = u.role || role; }
       }
-      if (!actorId) {
-        const u = await User.findOne({ clerkId: byUserId }).select('_id role');
+      if (!actorId && candidate && typeof candidate === 'string') {
+        const u = await User.findOne({ clerkId: candidate }).select('_id role');
         if (u) { actorId = u._id; role = u.role || role; }
       }
       if (actorId) {
