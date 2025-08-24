@@ -9,12 +9,15 @@ import {
   PartnerSupport,
   Footer,
 } from "../landing";
+import { useUser } from "@clerk/clerk-react";
 
 /**
  * Landing page composed of marketing / introductory sections.
  * Uses semantic <main> container instead of a generic <div> for accessibility.
  */
 export default function Landing() {
+  const { user } = useUser();
+  console.log(user)
   useEffect(() => {
     const handleServices = () => {
       // Placeholder: could trigger analytics or chain next section animations

@@ -13,6 +13,7 @@
     "@clerk/clerk-react": "^5.43.1",
     "@heroicons/react": "^2.2.0",
     "@tailwindcss/vite": "^4.1.12",
+    "axios": "^1.11.0",
     "framer-motion": "^12.23.12",
     "gsap": "^3.12.5",
     "lucide-react": "^0.541.0",
