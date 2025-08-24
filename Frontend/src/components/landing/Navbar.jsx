@@ -42,30 +42,13 @@ export default function Navbar() {
     return () => ctx.revert();
   }, []);
 
-  // Scroll hide / show
-  useEffect(() => {
-    let lastY = window.scrollY;
-    const el = headerRef.current;
-    const onScroll = () => {
-      if (menuOpen) { // keep header visible while menu open
-        if (el) el.style.transform = 'translateY(0)';
-        return;
-      }
-      const y = window.scrollY;
-      if (!el) return;
-      if (y > 120 && y > lastY) {
-        el.style.transform = 'translateY(-100%)';
-      } else {
-        el.style.transform = 'translateY(0)';
-      }
-      lastY = y;
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, [menuOpen]);
-
   return (
-    <header ref={headerRef} className="group z-50 flex justify-between items-center px-4 sm:px-6 py-3 bg-white/80 backdrop-blur-xl shadow-sm relative gap-4 transition-colors duration-300 border-b border-white/40 supports-[backdrop-filter]:bg-white/60">
+    <header
+      ref={headerRef}
+      className="group sticky top-2 z-50 flex justify-between items-center px-4 sm:px-6 py-3 mx-auto w-[90%] max-w-7xl rounded-2xl bg-white/10 backdrop-blur-2xl saturate-150 shadow-[0_8px_30px_-4px_rgba(0,0,0,0.25)] border border-white/25 ring-1 ring-white/30 relative gap-4 transition-colors duration-300 overflow-hidden supports-[backdrop-filter]:bg-white/10"
+    >
+      {/* subtle sheen */}
+      <span className="pointer-events-none absolute inset-0 before:absolute before:inset-0 before:bg-[linear-gradient(135deg,rgba(255,255,255,0.25)_0%,rgba(255,255,255,0.05)_35%,rgba(255,255,255,0)_60%)] opacity-60 mix-blend-overlay" />
       <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
         <motion.h1 ref={logoRef} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }} className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-orange-500 text-transparent bg-clip-text drop-shadow-sm">
           Nigam Ai
@@ -140,7 +123,7 @@ export default function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: .28, ease: 'easeOut' }}
-            className="md:hidden absolute top-full left-0 w-full bg-white/95 backdrop-blur-xl shadow-xl border-t border-gray-200 origin-top z-50 rounded-b-2xl"
+            className="md:hidden absolute top-full left-0 w-full bg-white/15 backdrop-blur-2xl saturate-150 shadow-[0_8px_28px_-4px_rgba(0,0,0,0.3)] border-t border-white/20 origin-top z-50 rounded-b-2xl"
           >
             <div className="flex flex-col p-4 gap-2">
               {links.map((l, i) => (
@@ -148,13 +131,13 @@ export default function Navbar() {
                   <NavLink
                     to={l.to}
                     onClick={closeMenu}
-                    className={({ isActive }) => `w-full text-left px-4 py-2 rounded-lg text-sm font-medium tracking-tight transition ${isActive ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-700 hover:bg-gray-100'}`}
+                    className={({ isActive }) => `w-full text-left px-4 py-2 rounded-lg text-sm font-medium tracking-tight transition ${isActive ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-700 hover:bg-white/40 hover:text-gray-900'}`}
                   >
                     {l.label}
                   </NavLink>
                 </motion.div>
               ))}
-              <div className="pt-2 border-t border-gray-200 mt-1 flex items-center gap-3">
+              <div className="pt-2 border-t border-white/20 mt-1 flex items-center gap-3">
                 <SignedOut>
                   <SignInButton mode="modal">
                     <motion.button whileTap={{ scale: .96 }} onClick={closeMenu} className="w-full px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60">

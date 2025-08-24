@@ -24,23 +24,10 @@ export default function PartnerSupport() {
     const section = sectionRef.current;
     if (!section) return;
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (prefersReduced) return; // fallback relies on framer-motion initial/animate only
 
     const ctx = gsap.context(() => {
-      const cards = gsap.utils.toArray(".partner-support-card");
-      gsap.from(cards, {
-        y: 60,
-        opacity: 0,
-        stagger: 0.18,
-        duration: 0.9,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: section,
-          start: "top 75%",
-        },
-      });
-      // progress bar linking bottom of section
-      if (progressRef.current) {
+      // Progress bar only (cards handled by framer-motion). Keeping this light avoids double-control of opacity.
+      if (!prefersReduced && progressRef.current) {
         gsap.fromTo(
           progressRef.current,
           { scaleX: 0 },
@@ -84,7 +71,7 @@ export default function PartnerSupport() {
             className="partner-support-card relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-400 to-amber-300 shadow-md ring-1 ring-orange-300/40 flex flex-col sm:flex-row items-center p-8 gap-8 group"
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, amount: 0.4 }}
+            viewport={{ once: true, amount: 0.25 }}
             variants={cardVariants}
             custom={0}
           >
@@ -130,7 +117,7 @@ export default function PartnerSupport() {
             className="partner-support-card relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-50 via-white to-gray-100 shadow-md ring-1 ring-gray-200 flex flex-col md:flex-row items-center p-8 gap-8 group"
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, amount: 0.4 }}
+            viewport={{ once: true, amount: 0.25 }}
             variants={cardVariants}
             custom={1}
           >
