@@ -1,26 +1,15 @@
 @import "tailwindcss";
+@import "./theme.css";
 
-:root {
-	--color-bg: 255 255 255; /* white */
-	--color-surface: 248 250 252; /* light gray */
-	--color-primary: 59 130 246; /* blue-500 */
-	--color-primary-accent: 37 99 235; /* blue-600 */
-	--color-accent: 249 115 22; /* orange-500 */
-	--color-accent-emph: 234 88 12; /* orange-600 */
-	--color-text: 17 24 39; /* gray-900 */
-	--color-text-soft: 75 85 99; /* gray-600 */
-	--ease-spring: cubic-bezier(.4,0,.2,1);
-}
+/* Legacy root color tokens removed in favor of design system variables in theme.css */
+:root { --ease-spring: cubic-bezier(.4,0,.2,1); }
 
 html {
 	scroll-behavior: smooth;
 }
 
-body {
-	background-color: rgb(var(--color-bg));
-	color: rgb(var(--color-text));
-	font-feature-settings: "ss01";
-}
+/* Body styles now handled in theme.css (uses --ds-bg / --ds-text). Keep typography enhancements here if needed. */
+body { font-feature-settings: "ss01"; }
 
 /* Utility: glass effect */
 .glass {

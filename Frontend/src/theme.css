@@ -1,0 +1,270 @@
+/* Design System Theme Tokens (Light + Dark) */
+/* Use with Tailwind by referencing rgb(var(--ds-bg)) etc. in arbitrary values or create utilities */
+
+/* Light Theme (default) */
+:root {
+  --ds-bg: 249 249 255; /* #F9F9FF */
+  --ds-surface: 255 255 255; /* #FFFFFF */
+  --ds-primary: 106 0 244; /* #6A00F4 */
+  --ds-primary-foreground: 255 255 255; /* white for contrast */
+  --ds-secondary: 155 93 229; /* #9B5DE5 */
+  --ds-secondary-foreground: 255 255 255;
+  --ds-accent: 255 111 145; /* #FF6F91 */
+  --ds-accent-foreground: 255 255 255;
+  --ds-text: 45 45 45; /* #2D2D2D */
+  --ds-text-soft: 90 90 110; /* #5A5A6E */
+  --ds-success: 6 214 160; /* #06D6A0 */
+  --ds-warning: 255 179 71; /* #FFB347 */
+  --ds-error: 215 38 61; /* #D7263D */
+  --ds-border: 228 228 240; /* subtle border */
+  --ds-ring: 106 0 244; /* focus ring matches primary */
+  --ds-muted: 238 238 246;
+  --ds-muted-foreground: 108 108 126;
+  --ds-radius-sm: 4px;
+  --ds-radius: 6px;
+  --ds-radius-lg: 10px;
+  --ds-shadow-color: 17 17 26; /* base shadow color */
+}
+
+/* Dark Theme */
+.dark {
+  --ds-bg: 26 26 46; /* #1A1A2E */
+  --ds-surface: 36 36 62; /* #24243E */
+  --ds-primary: 155 93 229; /* #9B5DE5 (lighter pop on dark) */
+  --ds-primary-foreground: 20 10 38; /* deep backdrop tone */
+  --ds-secondary: 106 0 244; /* #6A00F4 */
+  --ds-secondary-foreground: 255 255 255;
+  --ds-accent: 255 111 145; /* #FF6F91 */
+  --ds-accent-foreground: 48 12 28;
+  --ds-text: 234 234 234; /* #EAEAEA */
+  --ds-text-soft: 181 181 197; /* #B5B5C5 */
+  --ds-success: 6 214 160; /* #06D6A0 */
+  --ds-warning: 255 209 102; /* #FFD166 */
+  --ds-error: 239 71 111; /* #EF476F */
+  --ds-border: 58 58 84; /* dark border */
+  --ds-ring: 155 93 229; /* focus ring */
+  --ds-muted: 48 48 74;
+  --ds-muted-foreground: 173 169 194;
+  --ds-shadow-color: 0 0 0;
+}
+
+/* Base element mappings */
+body {
+  background: rgb(var(--ds-bg));
+  color: rgb(var(--ds-text));
+}
+
+/* Scrollbars (Webkit) */
+body::-webkit-scrollbar {
+  width: 10px;
+}
+body::-webkit-scrollbar-track {
+  background: transparent;
+}
+body::-webkit-scrollbar-thumb {
+  background: rgba(var(--ds-text-soft), 0.25);
+  border-radius: 20px;
+}
+body::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--ds-text-soft), 0.4);
+}
+
+/* Component tokens */
+.card {
+  background: rgb(var(--ds-surface));
+  border: 1px solid rgb(var(--ds-border));
+  border-radius: var(--ds-radius);
+  box-shadow:
+    0 4px 10px -2px rgba(var(--ds-shadow-color), 0.15),
+    0 1px 3px rgba(var(--ds-shadow-color), 0.08);
+}
+.card-muted {
+  background: rgb(var(--ds-muted));
+}
+
+.btn {
+  --_btn-bg: var(--ds-primary);
+  --_btn-fg: var(--ds-primary-foreground);
+  --_btn-bg-rgb: var(--ds-primary);
+  background: rgb(var(--_btn-bg));
+  color: rgb(var(--_btn-fg));
+  font-weight: 500;
+  border-radius: var(--ds-radius-sm);
+  height: 2.25rem;
+  padding: 0 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1;
+  box-shadow:
+    0 2px 4px -1px rgba(var(--ds-shadow-color), 0.3),
+    0 1px 2px rgba(var(--ds-shadow-color), 0.2);
+  transition:
+    background 0.2s,
+    transform 0.15s,
+    box-shadow 0.2s;
+}
+.btn:hover {
+  filter: brightness(1.08);
+}
+.btn:active {
+  transform: translateY(1px);
+}
+.btn-secondary {
+  --_btn-bg: var(--ds-secondary);
+  --_btn-fg: var(--ds-secondary-foreground);
+}
+.btn-accent {
+  --_btn-bg: var(--ds-accent);
+  --_btn-fg: var(--ds-accent-foreground);
+}
+.btn-outline {
+  background: transparent;
+  color: rgb(var(--ds-primary));
+  border: 1px solid rgb(var(--ds-primary));
+  box-shadow: none;
+}
+.btn-outline:hover {
+  background: rgba(var(--ds-primary) / 0.1);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: rgb(var(--ds-muted));
+  color: rgb(var(--ds-text-soft));
+  padding: 0.35rem 0.55rem;
+  border-radius: 100px;
+}
+.badge-accent {
+  background: rgb(var(--ds-accent));
+  color: rgb(var(--ds-accent-foreground));
+}
+.badge-success {
+  background: rgb(var(--ds-success));
+  color: #052d23;
+}
+.badge-warning {
+  background: rgb(var(--ds-warning));
+  color: #4a2c00;
+}
+.badge-error {
+  background: rgb(var(--ds-error));
+  color: #fff;
+}
+
+.surface-border {
+  border: 1px solid rgb(var(--ds-border));
+}
+
+/* Form elements */
+input,
+select,
+textarea {
+  background: rgb(var(--ds-surface));
+  border: 1px solid rgb(var(--ds-border));
+  color: rgb(var(--ds-text));
+  border-radius: var(--ds-radius-sm);
+  padding: 0.55rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.2;
+  transition:
+    border-color 0.18s,
+    background 0.18s;
+}
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid rgba(var(--ds-ring), 0.4);
+  outline-offset: 2px;
+}
+input::placeholder,
+textarea::placeholder {
+  color: rgba(var(--ds-text-soft), 0.7);
+}
+
+/* Focus helper */
+.focus-ring {
+  outline: 2px solid rgba(var(--ds-ring), 0.55);
+  outline-offset: 2px;
+}
+
+/* Tables */
+table.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+table.data-table thead th {
+  text-align: left;
+  font-weight: 600;
+  color: rgb(var(--ds-text-soft));
+  padding: 0.65rem 0.75rem;
+  background: rgb(var(--ds-muted));
+  border-bottom: 1px solid rgb(var(--ds-border));
+}
+table.data-table tbody td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid rgb(var(--ds-border));
+}
+table.data-table tbody tr:hover {
+  background: rgba(var(--ds-muted), 0.5);
+}
+
+/* Utility classes for backgrounds & text (if not using Tailwind plugin) */
+.bg-app {
+  background: rgb(var(--ds-bg));
+}
+.bg-surface {
+  background: rgb(var(--ds-surface));
+}
+.bg-muted {
+  background: rgb(var(--ds-muted));
+}
+.text-soft {
+  color: rgb(var(--ds-text-soft));
+}
+.text-accent {
+  color: rgb(var(--ds-accent));
+}
+.border-default {
+  border-color: rgb(var(--ds-border));
+}
+.shadow-elevate {
+  box-shadow:
+    0 6px 18px -4px rgba(var(--ds-shadow-color), 0.25),
+    0 2px 6px rgba(var(--ds-shadow-color), 0.15);
+}
+
+/* Primary color utilities */
+.text-primary { color: rgb(var(--ds-primary)); }
+.bg-primary { background: rgb(var(--ds-primary)); }
+.bg-primary-soft { background: rgba(var(--ds-primary),0.12); }
+.bg-accent-soft { background: rgba(var(--ds-accent),0.15); }
+.border-primary { border-color: rgb(var(--ds-primary)); }
+.bg-surface-trans { background: rgba(var(--ds-surface),0.75); backdrop-filter: saturate(140%) blur(18px); -webkit-backdrop-filter: saturate(140%) blur(18px); }
+
+/* Opacity variants */
+.bg-surface-80 { background: rgba(var(--ds-surface),0.80); }
+.bg-surface-60 { background: rgba(var(--ds-surface),0.60); }
+.bg-surface-40 { background: rgba(var(--ds-surface),0.40); }
+
+/* Ring utility mapping */
+.ring-default { --tw-ring-color: rgb(var(--ds-border)); }
+
+/* Theme transition helper */
+.theme-transition * {
+  transition:
+    background-color 0.35s,
+    color 0.35s,
+    border-color 0.35s;
+}
+
+/* Dark mode media preference auto apply (optional): enable class strategy first, then uncomment if desired */
+/* @media (prefers-color-scheme: dark) { :root:not(.light) { color-scheme: dark; } } */

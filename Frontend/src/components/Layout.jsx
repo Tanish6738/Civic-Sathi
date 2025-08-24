@@ -60,7 +60,7 @@ const Layout = ({ children }) => {
   },[user, dbUser, setDbUser]);
 
   return (
-    <div className={`min-h-screen w-full flex bg-gradient-to-br from-gray-100 via-gray-100 to-gray-200 text-gray-900 ${needsPhone ? 'overflow-hidden' : ''}`}>
+  <div className={`min-h-screen w-full flex bg-app text-soft transition-colors duration-300 ${needsPhone ? 'overflow-hidden' : ''}`}>
   <SidebarTab open={open} setOpen={setOpen} navItems={navItems} isLoaded={isLoaded} user={user} isAdmin={isAdmin} />
       <div className="flex-1 flex flex-col min-h-screen md:pl-0 relative">
         <Navbar open={open} setOpen={setOpen} isAdmin={isAdmin} />
