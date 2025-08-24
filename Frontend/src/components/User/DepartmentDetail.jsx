@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getDepartmentById, updateDepartment } from '../../services/department.services';
 import { useUser } from '@clerk/clerk-react';
 import { ArrowLeft, Save, Pencil, X, Building2, Users2, Layers, Info } from 'lucide-react';

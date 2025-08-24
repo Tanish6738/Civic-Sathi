@@ -7,6 +7,7 @@ const categoryRoutes = require('../routes/categoryRoutes');
 const actionRoutes = require('../routes/actionRoutes');
 const auditLogRoutes = require('../routes/auditLogRoutes');
 const departmentRoutes = require('../routes/departmentRoutes');
+const adminRoutes = require('../routes/adminRoutes');
 
 const { attachUser } = require('../middleware/auth');
 
@@ -24,6 +25,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/actions', actionRoutes);
 app.use('/api/audit-logs', auditLogRoutes);
 app.use('/api/departments', departmentRoutes);
+app.use('/api/admin', adminRoutes);
 
 
 module.exports = app;
