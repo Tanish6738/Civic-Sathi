@@ -154,7 +154,7 @@ const UsersHome = () => {
   const confirmReport = () => {
     stopListening();
   // Navigate to report page carrying state (service + transcript + optional audio)
-  navigate('/report', { state: { transcript, service: serviceSelected, audio: audioBase64Ref.current, audioDuration } });
+  navigate('/user/reports/new', { state: { transcript, service: serviceSelected, audio: audioBase64Ref.current, audioDuration } });
   };
 
   const retry = () => {

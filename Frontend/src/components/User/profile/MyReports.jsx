@@ -1,101 +1,117 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useUser } from '@clerk/clerk-react';
-import { Clock, MapPin, ImageOff, Filter, RefreshCcw } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Clock, MapPin, Filter, RefreshCcw } from 'lucide-react';
+import { getReports } from '../../../services/report.services';
+import { getAuditLogs } from '../../../services/auditLog.services';
 
-const STORAGE_KEY = 'reports';
-const loadReports = () => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; } };
-
-const statusColors = {
-  Pending: 'bg-amber-100 text-amber-700 ring-amber-300',
-  Resolved: 'bg-emerald-100 text-emerald-700 ring-emerald-300',
-  Rejected: 'bg-rose-100 text-rose-700 ring-rose-300'
+const statusStyles = {
+  submitted: 'bg-amber-100 text-amber-700 ring-amber-300',
+  assigned: 'bg-indigo-100 text-indigo-700 ring-indigo-300',
+  in_progress: 'bg-blue-100 text-blue-700 ring-blue-300',
+  awaiting_verification: 'bg-violet-100 text-violet-700 ring-violet-300',
+  verified: 'bg-emerald-100 text-emerald-700 ring-emerald-300',
+  closed: 'bg-gray-200 text-gray-700 ring-gray-300',
+  deleted: 'bg-rose-100 text-rose-700 ring-rose-300'
 };
 
 const MyReports = () => {
   const { isLoaded, user } = useUser();
-  const [reports, setReports] = useState([]);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
-  const refresh = () => setReports(loadReports());
-  useEffect(()=>{ refresh(); },[]);
+  const fetchReports = async () => {
+    if (!user) return;
+    setLoading(true); setError('');
+    try {
+      const res = await getReports({ reporter: user.publicMetadata?.mongoId || user.id, limit: 100 });
+      const items = res.items || [];
+      // Fetch latest audit log for each (sequential minimal; could optimize)
+      const withLogs = await Promise.all(items.map(async r => {
+        try {
+          const logsRes = await getAuditLogs({ report: r._id, limit: 1 });
+          return { ...r, _latestLog: logsRes.items?.[0] };
+        } catch { return r; }
+      }));
+      setItems(withLogs);
+    } catch (e) {
+      setError(e?.response?.data?.message || 'Failed to load reports');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const myReports = useMemo(()=>{
-    if(!user) return [];
-    return reports.filter(r => r.userId === user.id);
-  },[reports,user]);
+  useEffect(() => { fetchReports(); // eslint-disable-next-line
+  }, [user?.id]);
 
-  const filtered = myReports.filter(r =>
-    (!query || r.title.toLowerCase().includes(query.toLowerCase()) || r.category.toLowerCase().includes(query.toLowerCase())) &&
-    (!statusFilter || r.status === statusFilter)
-  ).sort((a,b)=> new Date(b.createdAt) - new Date(a.createdAt));
+  const filtered = useMemo(() => {
+    return (items || []).filter(r => {
+      const q = query.toLowerCase();
+      const matchQ = !q || r.title?.toLowerCase().includes(q) || r.description?.toLowerCase().includes(q) || r?.category?.name?.toLowerCase().includes(q);
+      const matchStatus = !statusFilter || r.status === statusFilter;
+      return matchQ && matchStatus;
+    });
+  }, [items, query, statusFilter]);
 
-  if(!isLoaded) return <div className="text-sm text-gray-500">Loading...</div>;
-  if(!user) return <div className="text-sm text-gray-500">Please sign in to view your reports.</div>;
+  if (!isLoaded) return <div className="text-sm text-gray-500">Loading...</div>;
+  if (!user) return <div className="text-sm text-gray-500">Sign in required.</div>;
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 px-3 sm:px-4 animate-fade-in">
-      <style>{`
-        .animate-fade-in{animation:fade-in .5s ease both;}
-        @keyframes fade-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-        .card-pop{animation:card .5s ease both;}
-        @keyframes card{from{opacity:0;transform:scale(.975) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
-        .grid-auto-fill{grid-template-columns:repeat(auto-fill,minmax(250px,1fr));}
-      `}</style>
+      <style>{`.animate-fade-in{animation:fade-in .5s ease both;}@keyframes fade-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight mb-2">My Reports</h1>
-          <p className="text-sm text-gray-600">Track status of issues you have reported.</p>
+          <p className="text-sm text-gray-600">Track the issues you've reported.</p>
         </div>
         <div className="flex flex-wrap gap-3 items-center">
           <div className="flex items-center gap-2 bg-white/80 backdrop-blur px-3 h-11 rounded-lg border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-indigo-500/50">
             <Filter size={16} className="text-gray-500" />
-            <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search title/category" className="bg-transparent outline-none text-sm w-40 sm:w-48" />
+            <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search" className="bg-transparent outline-none text-sm w-40 sm:w-48" />
           </div>
           <select value={statusFilter} onChange={e=>setStatusFilter(e.target.value)} className="h-11 px-3 rounded-lg border border-gray-300 bg-white/80 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50">
             <option value="">All Status</option>
-            <option>Pending</option>
-            <option>Resolved</option>
-            <option>Rejected</option>
+            {Object.keys(statusStyles).filter(s=>s!=='deleted').map(s => <option key={s} value={s}>{s}</option>)}
           </select>
-          <button onClick={refresh} className="inline-flex items-center gap-1 h-11 px-4 rounded-lg bg-indigo-600 text-white text-sm font-medium shadow hover:bg-indigo-500 active:scale-95 transition">
-            <RefreshCcw size={16} className="animate-spin-slow" /> Refresh
+          <button onClick={fetchReports} disabled={loading} className="inline-flex items-center gap-1 h-11 px-4 rounded-lg bg-indigo-600 text-white text-sm font-medium shadow hover:bg-indigo-500 active:scale-95 transition disabled:opacity-50">
+            <RefreshCcw size={16} className={loading? 'animate-spin':''} /> {loading ? 'Loading' : 'Refresh'}
           </button>
         </div>
       </div>
-
-      {filtered.length === 0 ? (
-        <div className="text-sm text-gray-500 bg-white/80 backdrop-blur border border-dashed border-gray-300 rounded-xl p-10 text-center animate-fade-in">
-          No reports found.
+      {error && <div className="text-sm text-rose-600 bg-rose-50 border border-rose-200 rounded-md p-3">{error}</div>}
+      {filtered.length === 0 && !loading && !error && (
+        <div className="text-sm text-gray-500 bg-white/80 backdrop-blur border border-dashed border-gray-300 rounded-xl p-10 text-center">No reports yet.</div>
+      )}
+      {filtered.length > 0 && (
+        <div className="overflow-x-auto bg-white/70 backdrop-blur rounded-xl border border-gray-200 shadow-sm">
+          <table className="w-full text-sm">
+            <thead className="text-left text-gray-600 uppercase text-[11px] tracking-wide bg-gray-50">
+              <tr>
+                <th className="px-4 py-3 font-medium">Title</th>
+                <th className="px-4 py-3 font-medium">Category</th>
+                <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Created</th>
+                <th className="px-4 py-3 font-medium">Last Activity</th>
+                <th className="px-4 py-3 font-medium" />
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(r => (
+                <tr key={r._id} className="border-t border-gray-100 hover:bg-indigo-50/40">
+                  <td className="px-4 py-3 font-medium text-gray-800 max-w-xs truncate">{r.title}</td>
+                  <td className="px-4 py-3 text-gray-600">{r.category?.name || '—'}</td>
+                  <td className="px-4 py-3"><span className={`text-[10px] font-semibold px-2 py-1 rounded-md ring-1 ${statusStyles[r.status] || 'bg-gray-100 text-gray-600 ring-gray-300'}`}>{r.status}</span></td>
+                  <td className="px-4 py-3 text-gray-600 whitespace-nowrap"><span className="inline-flex items-center gap-1"><Clock size={12} /> {new Date(r.createdAt).toLocaleDateString()}</span></td>
+                  <td className="px-4 py-3 text-gray-600 text-xs max-w-[180px] truncate">{r._latestLog ? `${r._latestLog.action} · ${new Date(r._latestLog.createdAt).toLocaleDateString()}` : '—'}</td>
+                  <td className="px-4 py-3 text-right"><Link to={`/user/reports/${r._id}`} className="text-indigo-600 hover:underline">View</Link></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      ) : (
-        <ul className="grid gap-5 grid-auto-fill">
-          {filtered.map((r,i) => (
-            <li key={r.id} style={{animationDelay:`${i*40}ms`}} className="card-pop group relative rounded-xl border border-gray-200 bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md transition overflow-hidden hover:-translate-y-0.5 will-change-transform">
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-br from-indigo-50/60 to-transparent pointer-events-none transition" />
-              {r.image ? (
-                <img src={r.image} alt={r.title} className="h-40 w-full object-cover border-b border-gray-200 transition-transform group-hover:scale-[1.02]" loading="lazy" />
-              ) : (
-                <div className="h-40 w-full flex items-center justify-center bg-gray-100 text-gray-400 border-b border-gray-200"><ImageOff size={32} /></div>
-              )}
-              <div className="p-4 space-y-3">
-                <div className="flex items-start justify-between gap-3">
-                  <h3 className="font-medium text-gray-900 leading-tight line-clamp-2 tracking-tight">{r.title}</h3>
-                  <span className={`text-[10px] font-semibold tracking-wide px-2 py-1 rounded-md ring-1 ${statusColors[r.status] || 'bg-gray-100 text-gray-600 ring-gray-300'}`}>{r.status}</span>
-                </div>
-                <div className="flex flex-wrap gap-2 text-[11px] font-medium uppercase tracking-wide">
-                  <span className="px-2 py-1 rounded-md bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200">{r.category}</span>
-                  {r.location && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100 text-gray-700 ring-1 ring-gray-300"><MapPin size={12} /> {r.location}</span>}
-                </div>
-                <p className="text-sm text-gray-600 line-clamp-3 min-h-[60px] leading-relaxed">{r.description}</p>
-                <div className="flex items-center justify-between text-[11px] text-gray-500">
-                  <span className="inline-flex items-center gap-1 whitespace-nowrap"><Clock size={12} /> {new Date(r.createdAt).toLocaleString(undefined,{dateStyle:'medium', timeStyle:'short'})}</span>
-                  <button onClick={()=>navigator.clipboard.writeText(r.id)} className="opacity-0 group-hover:opacity-100 text-indigo-600 hover:underline transition whitespace-nowrap">Copy ID</button>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
       )}
     </div>
   );

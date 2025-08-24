@@ -16,6 +16,9 @@ router.get('/:id', userController.getUserById);
 // PATCH /api/users/:id
 router.patch('/:id', userController.updateUser);
 
+// PUT /api/users/:id/phone
+router.put('/:id/phone', userController.updateUserPhone);
+
 // DELETE /api/users/:id (soft delete)
 router.delete('/:id', userController.softDeleteUser);
 

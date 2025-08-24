@@ -1,13 +1,70 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useUser } from '@clerk/clerk-react';
-import { Mail, ShieldCheck, LockKeyhole, KeyRound, CalendarClock, Hash, Copy, UserCircle, FileText, ArrowRight } from 'lucide-react';
+import { Mail, ShieldCheck, LockKeyhole, KeyRound, CalendarClock, Hash, Copy, UserCircle, FileText, ArrowRight, Phone, Building2, Save } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { getUserById, updateUser } from '../../services/user.services';
+import { useToast } from '../../contexts/ToastContext';
+import { useDbUser } from '../../contexts/UserContext';
 
 const STORAGE_KEY = 'reports';
 const loadReports = () => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; } };
 
 const Profile = () => {
   const { isLoaded, user } = useUser();
+  const { dbUser, setDbUser } = useDbUser();
+  const { notify } = useToast();
+  const [loadingDb, setLoadingDb] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({ name: '', phone: '', department: '' });
+  const [message, setMessage] = useState(null);
+
+  // Fetch the user document if we have clerk user but no dbUser loaded yet
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchDb() {
+      if (!user?.id || dbUser?._id) return; // already have
+      setLoadingDb(true);
+      try {
+        const res = await getUserById(user.id).catch(()=>null);
+        if (!cancelled && res) setDbUser(res);
+      } finally {
+        if (!cancelled) setLoadingDb(false);
+      }
+    }
+    fetchDb();
+    return () => { cancelled = true; };
+  }, [user, dbUser, setDbUser]);
+
+  // Initialize form when dbUser changes
+  useEffect(() => {
+    if (dbUser) {
+      setForm({ name: dbUser.name || '', phone: dbUser.phone || '', department: dbUser.department || '' });
+    }
+  }, [dbUser]);
+
+  const onChange = (e) => {
+    const { name, value } = e.target;
+    setForm(f => ({ ...f, [name]: value }));
+  };
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    if (!dbUser?._id) return;
+    setSaving(true); setMessage(null);
+    try {
+      const updated = await updateUser(dbUser._id, form);
+      setDbUser(updated);
+  notify('Profile updated', 'success');
+      setMessage({ type: 'success', text: 'Profile updated.' });
+    } catch (err) {
+  const msg = err?.response?.data?.message || 'Update failed';
+  notify(msg, 'error');
+      setMessage({ type: 'error', text: msg });
+    } finally {
+      setSaving(false);
+      setTimeout(() => setMessage(null), 4000);
+    }
+  };
 
   if (!isLoaded) {
     return (
@@ -22,9 +79,7 @@ const Profile = () => {
     );
   }
 
-  if (!user) {
-    return <div className="text-sm text-gray-500">No user data available.</div>;
-  }
+  if (!user) return <div className="text-sm text-gray-500">No user data available.</div>;
 
   const {
     firstName,
@@ -60,7 +115,7 @@ const Profile = () => {
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
-      {/* Header Card */}
+  {/* Header Card */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-indigo-500 to-indigo-700 text-white shadow-lg ring-1 ring-indigo-400/40">
         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_30%_30%,white,transparent_60%)]" />
         <div className="flex flex-col md:flex-row md:items-center gap-6 p-6 md:p-8 relative">
@@ -115,11 +170,38 @@ const Profile = () => {
         />
       </div>
 
-      {/* Recent Reports Summary */}
+      {/* Editable Profile (DB) */}
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold tracking-tight flex items-center gap-2"><UserCircle size={18}/> Profile Details</h2>
+        <form onSubmit={onSubmit} className="grid gap-5 md:grid-cols-3 bg-white/70 backdrop-blur p-6 rounded-xl border border-gray-200">
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-gray-600 flex items-center gap-1">Name<span className="text-rose-500">*</span></label>
+            <input name="name" value={form.name} onChange={onChange} required disabled={saving} className="h-11 w-full rounded-lg border border-gray-300 bg-white/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/60" placeholder="Your name" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-gray-600 flex items-center gap-1"><Phone size={12}/> Phone</label>
+            <input name="phone" value={form.phone} onChange={onChange} disabled={saving} className="h-11 w-full rounded-lg border border-gray-300 bg-white/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/60" placeholder="Phone" />
+          </div>
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-gray-600 flex items-center gap-1"><Building2 size={12}/> Department</label>
+              <input name="department" value={form.department} onChange={onChange} disabled={saving} className="h-11 w-full rounded-lg border border-gray-300 bg-white/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/60" placeholder="Department" />
+            </div>
+            <div className="md:col-span-3 flex flex-col sm:flex-row items-start sm:items-center gap-3 pt-2">
+              <button type="submit" disabled={saving || loadingDb || !dbUser?._id} className="inline-flex items-center gap-2 bg-indigo-600 text-white h-11 px-5 rounded-lg text-sm font-medium shadow hover:bg-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed active:scale-95 transition">
+                {saving && <span className="inline-block h-4 w-4 border-2 border-white/60 border-t-white rounded-full animate-spin" />}
+                <Save size={16}/> <span>{saving ? 'Saving...' : 'Save Changes'}</span>
+              </button>
+              {loadingDb && <span className="text-xs text-gray-500">Loading profile...</span>}
+              {message && <span className={`text-xs font-medium ${message.type==='error' ? 'text-rose-600' : 'text-emerald-600'}`}>{message.text}</span>}
+            </div>
+        </form>
+      </div>
+
+    {/* Recent Reports Summary */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold tracking-tight flex items-center gap-2"><FileText size={18}/> Recent Reports</h2>
-          <Link to="/my-reports" className="inline-flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-500">View All <ArrowRight size={14} /></Link>
+      <Link to="/user/reports" className="inline-flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-500">View All <ArrowRight size={14} /></Link>
         </div>
         {myReports.length === 0 ? (
           <div className="text-sm text-gray-500 bg-white/70 backdrop-blur p-6 rounded-xl border border-gray-200">No reports submitted yet.</div>

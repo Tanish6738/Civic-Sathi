@@ -10,7 +10,7 @@ const UserSchema = new Schema(
   clerkId: { type: String, index: true, unique: true, sparse: true },
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    phone: { type: String, trim: true },
+  phone: { type: String, trim: true, match: /^[0-9]{10}$/ },
     role: {
       type: String,
       enum: ['reporter', 'officer', 'admin', 'superadmin'],

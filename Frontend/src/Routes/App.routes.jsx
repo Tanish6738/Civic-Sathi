@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useUser, SignedIn, SignedOut } from '@clerk/clerk-react';
 import adminEmails from '../data/data.json';
@@ -13,6 +13,11 @@ import AdminDashBoard from '../components/Admin/AdminDashBoard';
 import AllReports from '../components/Admin/Reports/AllReports';
 import MyReports from '../components/User/profile/MyReports';
 import Layout from '../components/Layout';
+import CategoriesGrid from '../components/landing/CategoriesGrid';
+import AuditLogList from '../components/Admin/AuditLogList';
+import DepartmentsHome from '../components/User/DepartmentsHome';
+import DepartmentDetail from '../components/User/DepartmentDetail';
+import { UserProvider } from '../contexts/UserContext';
 
 const RequireAdmin = ({ children }) => {
   const { isLoaded, user } = useUser();
@@ -24,10 +29,6 @@ const RequireAdmin = ({ children }) => {
 
 // Landing page rendered standalone (outside Layout). All other pages wrapped in Layout.
 const withLayout = (el) => <Layout>{el}</Layout>;
-
-// UserContext to store synced DB user
-const UserContext = createContext({ dbUser: null, setDbUser: () => {} });
-export const useDbUser = () => useContext(UserContext);
 
 const AppRoutes = () => {
   const { isLoaded, isSignedIn, user } = useUser();
@@ -59,29 +60,17 @@ const AppRoutes = () => {
   }, [isLoaded, isSignedIn, user]);
 
   return (
-    <UserContext.Provider value={{ dbUser, setDbUser, syncing }}>
+    <UserProvider initialUser={dbUser}>
       <Routes>
         <Route path="/" element={<Landing />} />
-        <Route
-          path="/users"
-          element={<SignedIn>{withLayout(<UsersHome />)}</SignedIn>}
-        />
-        <Route
-          path="/report"
-          element={<SignedIn>{withLayout(<Report />)}</SignedIn>}
-        />
-        <Route
-          path="/my-reports"
-          element={<SignedIn>{withLayout(<MyReports />)}</SignedIn>}
-        />
-        <Route
-          path="/categories"
-          element={<SignedIn>{withLayout(<CategoryFormPage />)}</SignedIn>}
-        />
-        <Route
-          path="/profile"
-          element={<SignedIn>{withLayout(<Profile />)}</SignedIn>}
-        />
+        <Route path="/user/profile" element={<SignedIn>{withLayout(<Profile />)}</SignedIn>} />
+  <Route path="/user/reports" element={<SignedIn>{withLayout(<MyReports />)}</SignedIn>} />
+  <Route path="/user/reports/:id" element={<SignedIn>{withLayout(<Report />)}</SignedIn>} />
+        <Route path="/user/categories" element={<SignedIn>{withLayout(<CategoryFormPage />)}</SignedIn>} />
+        <Route path="/categories" element={withLayout(<CategoriesGrid />)} />
+  <Route path="/departments" element={withLayout(<DepartmentsHome />)} />
+  <Route path="/departments/:id" element={withLayout(<DepartmentDetail />)} />
+        <Route path="/users" element={<SignedIn>{withLayout(<UsersHome />)}</SignedIn>} />
         <Route
           path="/admin"
           element={<SignedIn>{withLayout(<RequireAdmin><AdminDashBoard /></RequireAdmin>)}</SignedIn>}
@@ -89,6 +78,10 @@ const AppRoutes = () => {
         <Route
           path="/admin/reports"
           element={<SignedIn>{withLayout(<RequireAdmin><AllReports /></RequireAdmin>)}</SignedIn>}
+        />
+        <Route
+          path="/audit-logs"
+          element={<SignedIn>{withLayout(<RequireAdmin><AuditLogList /></RequireAdmin>)}</SignedIn>}
         />
         <Route
           path="*"
@@ -100,7 +93,7 @@ const AppRoutes = () => {
       </SignedOut>
       {syncing && <div style={{ position: 'fixed', bottom: 8, right: 8, background: '#222', color: '#fff', padding: '6px 10px', borderRadius: 4, fontSize: 12 }}>Syncing profile...</div>}
       {syncError && <div style={{ position: 'fixed', bottom: 8, right: 8, background: '#b00020', color: '#fff', padding: '6px 10px', borderRadius: 4, fontSize: 12 }}>{syncError}</div>}
-    </UserContext.Provider>
+    </UserProvider>
   );
 };
 

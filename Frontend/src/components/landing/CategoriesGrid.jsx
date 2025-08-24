@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
   const baseCard = "group relative w-full flex items-start gap-4 rounded-2xl bg-white border border-gray-200 p-4 md:p-5 shadow-sm hover:shadow-md hover:border-blue-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 transition overflow-hidden text-left min-h-[150px]";
-import { categories } from "./landingData.jsx";
+// Backend-driven categories
+import { getCategories } from '../../services/category.services';
 import { motion } from 'framer-motion';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -23,17 +24,25 @@ export default function CategoriesGrid() {
   const chipRefs = useRef([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
+  const [cats, setCats] = useState([]);
+  const [error, setError] = useState('');
   const [focusedChip, setFocusedChip] = useState(-1);
 
-  // Simulate async fetch delay for skeleton demo
   useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 650);
-    return () => clearTimeout(t);
-  }, []);
+    let cancelled = false;
+    async function load(){
+      setLoading(true); setError('');
+      try { const data = await getCategories(); if(!cancelled) setCats(data || []); }
+      catch(e){ if(!cancelled) setError(e?.response?.data?.message || 'Failed to load categories'); }
+      finally { if(!cancelled) setLoading(false); }
+    }
+    load();
+    return ()=>{ cancelled = true; };
+  },[]);
 
   const filtered = !query.trim()
-    ? categories
-    : categories.filter(c => c.name.toLowerCase().includes(query.toLowerCase()));
+    ? cats
+    : cats.filter(c => c.name.toLowerCase().includes(query.toLowerCase()));
 
   useEffect(() => {
     const el = sectionRef.current;
@@ -100,7 +109,7 @@ export default function CategoriesGrid() {
                 >✕</button>
               )}
             </div>
-            <p className="mt-2 text-[11px] tracking-wide text-gray-500">{filtered.length} service{filtered.length !== 1 && 's'} found</p>
+            <p className="mt-2 text-[11px] tracking-wide text-gray-500">{filtered.length} service{filtered.length !== 1 && 's'} found {error && <span className="text-rose-600">· {error}</span>}</p>
           </div>
         </header>
 
@@ -159,7 +168,7 @@ export default function CategoriesGrid() {
                   aria-label={`Open ${cat.name} form`}
                 >
                   <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-br from-blue-50 via-white to-orange-50" />
-                  <span className={`relative flex items-center justify-center w-12 h-12 rounded-xl ${cat.bg} ring-1 ring-white shadow-sm text-blue-700`}>{cat.icon}</span>
+                  <span className={`relative flex items-center justify-center w-12 h-12 rounded-xl bg-blue-50 ring-1 ring-blue-100 shadow-sm text-blue-700`}>{cat.name.charAt(0).toUpperCase()}</span>
                   <span className="relative flex-1 min-w-0">
                     <span className="block font-semibold text-sm md:text-base text-gray-800 leading-snug tracking-tight line-clamp-2 min-h-[42px]">{cat.name}</span>
                     <span className="mt-2 inline-flex items-center gap-1 text-[11px] font-medium text-blue-600/80 group-hover:text-blue-600">Start <ChevronRight size={14} className="transition-transform group-hover:translate-x-0.5" /></span>

@@ -27,7 +27,7 @@ const ReportSchema = new Schema(
     title: { type: String, required: true, trim: true },
     description: { type: String, required: true, trim: true },
     department: { type: String, trim: true },
-    category: { type: Schema.Types.ObjectId, ref: 'Category', required: true, index: true },
+  category: { type: Schema.Types.ObjectId, ref: 'Category', required: false, index: true },
     reporter: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     assignedTo: [
       {
@@ -44,7 +44,8 @@ const ReportSchema = new Schema(
         'in_progress',
         'awaiting_verification',
         'verified',
-        'closed'
+  'closed',
+  'deleted'
       ],
       default: 'draft',
       index: true

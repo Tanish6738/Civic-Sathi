@@ -14,8 +14,9 @@ const Navbar = ({ open, setOpen, isAdmin }) => {
   // Central nav configuration (only key, label, to, icon)
   const navItems = useMemo(() => {
     const base = [
-      { key: 'services', label: 'Services', to: '/categories', icon: Layers },
-      { key: 'my-reports', label: 'My Reports', to: '/my-reports', icon: FileText },
+      { key: 'services', label: 'Services', to: '/user/categories', icon: Layers },
+      { key: 'departments', label: 'Departments', to: '/departments', icon: Layers },
+      { key: 'my-reports', label: 'My Reports', to: '/user/reports', icon: FileText },
     ];
     if (isAdmin) {
       base.push(

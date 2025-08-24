@@ -60,8 +60,15 @@ exports.getUserById = async (req, res) => {
   try {
     const { id } = req.params;
     if (!id) return respond(res, { success: false, status: 400, message: 'User id is required' });
-
-    const user = await User.findById(id);
+    let user = null;
+    const isLikelyObjectId = /^[a-fA-F0-9]{24}$/.test(id);
+    if (isLikelyObjectId) {
+      user = await User.findById(id);
+    }
+    if (!user) {
+      // fallback treat param as clerkId
+      user = await User.findOne({ clerkId: id });
+    }
     if (!user) return respond(res, { success: false, status: 404, message: 'User not found' });
 
     return respond(res, { data: user });
@@ -129,6 +136,24 @@ exports.updateUser = async (req, res) => {
     return respond(res, { data: user, message: 'User updated' });
   } catch (err) {
     console.error('updateUser error:', err);
+    return respond(res, { success: false, status: 500, message: 'Internal server error' });
+  }
+};
+
+// PUT /api/users/:id/phone
+exports.updateUserPhone = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { phone } = req.body || {};
+    if (!id) return respond(res, { success: false, status: 400, message: 'User id is required' });
+    if (!phone || !/^[0-9]{10}$/.test(phone)) {
+      return respond(res, { success: false, status: 400, message: 'Valid 10-digit phone required' });
+    }
+    const user = await User.findByIdAndUpdate(id, { phone }, { new: true, runValidators: true });
+    if (!user) return respond(res, { success: false, status: 404, message: 'User not found' });
+    return respond(res, { data: user, message: 'Phone updated' });
+  } catch (err) {
+    console.error('updateUserPhone error:', err);
     return respond(res, { success: false, status: 500, message: 'Internal server error' });
   }
 };

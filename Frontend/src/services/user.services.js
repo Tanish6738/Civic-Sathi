@@ -33,8 +33,26 @@ export async function updateUser(id, updates) {
   return data.data;
 }
 
+export async function updateUserPhone(userId, phone) {
+  const { data } = await api.put(`/users/${userId}/phone`, { phone });
+  return data.data;
+}
+
+// params: { role, department, status, search, page, limit }
+export async function getAllUsers(params = {}) {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([k,v]) => {
+    if (v !== undefined && v !== null && v !== '') query.append(k, v);
+  });
+  const qs = query.toString();
+  const { data } = await api.get(`/users${qs ? `?${qs}` : ''}`);
+  return data.data; // Expect array or paginated payload
+}
+
 export default {
   syncUser,
   getUserById,
   updateUser,
+  updateUserPhone,
+  getAllUsers,
 };

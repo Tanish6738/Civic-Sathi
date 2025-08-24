@@ -11,10 +11,10 @@ import logo from '../../assets/logo.png';
 gsap.registerPlugin(ScrollTrigger);
 // Central nav list (user scope)
 const BASE_LINKS = [
-  { to: '/categories', label: 'Services' },
-  { to: '/report', label: 'Report' },
-  { to: '/my-reports', label: 'My Reports' },
-  { to: '/profile', label: 'Profile' },
+  { to: '/user/categories', label: 'Services' },
+  { to: '/user/reports/new', label: 'Report' },
+  { to: '/user/reports', label: 'My Reports' },
+  { to: '/user/profile', label: 'Profile' },
 ];
 
 export default function Navbar() {
