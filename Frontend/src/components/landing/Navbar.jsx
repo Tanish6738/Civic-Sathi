@@ -80,7 +80,7 @@ export default function Navbar() {
           ref={logoRef}
           whileHover={{ scale: 1.04 }}
           whileTap={{ scale: 0.96 }}
-          className="text-2xl font-extrabold tracking-tight text-black"
+          className="text-2xl font-extrabold tracking-tight text-purple"
         >
           Nigam Ai
         </motion.h1>
@@ -97,7 +97,7 @@ export default function Navbar() {
           >
             <NavLink
               to={l.to}
-              className={({ isActive }) => `px-3 py-2 rounded-md transition-colors duration-300 inline-flex items-center gap-1 ${isActive ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'}`}
+              className={({ isActive }) => `px-3 py-2 rounded-md transition-colors duration-300 inline-flex items-center gap-1 ${isActive ? 'bg-blue-600 text-white shadow-sm' : 'text-white hover:text-white hover:bg-black/50'}`}
             >
               {l.label}
             </NavLink>
@@ -124,7 +124,7 @@ export default function Navbar() {
           <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: .94 }}>
             <UserButton appearance={{ elements: { avatarBox: 'h-9 w-9' } }} afterSignOutUrl="/" />
           </motion.div>
-          <SignOutButton className="h-9 text-xs hover:bg-orange-500/10 text-gray-700" />
+          <SignOutButton className="h-9 text-xs hover:bg-blue-500 " />
         </SignedIn>
       </div>
 

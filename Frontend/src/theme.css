@@ -1,50 +1,93 @@
 /* Design System Theme Tokens (Light + Dark) */
 /* Use with Tailwind by referencing rgb(var(--ds-bg)) etc. in arbitrary values or create utilities */
 
-/* Light Theme (default) */
+/* Light Theme (default) - BOLD COLOR PALETTE */
 :root {
-  --ds-bg: 249 249 255; /* #F9F9FF */
+  --ds-bg: 245 247 255; /* #F5F7FF - Slightly blue tinted background */
   --ds-surface: 255 255 255; /* #FFFFFF */
-  --ds-primary: 106 0 244; /* #6A00F4 */
+  
+  /* Bold Primary Colors */
+  --ds-primary: 88 0 232; /* #5800E8 - Bolder purple */
   --ds-primary-foreground: 255 255 255; /* white for contrast */
-  --ds-secondary: 155 93 229; /* #9B5DE5 */
+  
+  /* Bold Secondary Colors */
+  --ds-secondary: 138 43 226; /* #8A2BE2 - BlueViolet */
   --ds-secondary-foreground: 255 255 255;
-  --ds-accent: 255 111 145; /* #FF6F91 */
+  
+  /* Bold Accent Colors */
+  --ds-accent: 255 64 129; /* #FF4081 - Bright pink */
   --ds-accent-foreground: 255 255 255;
-  --ds-text: 45 45 45; /* #2D2D2D */
-  --ds-text-soft: 90 90 110; /* #5A5A6E */
-  --ds-success: 6 214 160; /* #06D6A0 */
-  --ds-warning: 255 179 71; /* #FFB347 */
-  --ds-error: 215 38 61; /* #D7263D */
-  --ds-border: 228 228 240; /* subtle border */
-  --ds-ring: 106 0 244; /* focus ring matches primary */
-  --ds-muted: 238 238 246;
-  --ds-muted-foreground: 108 108 126;
-  --ds-radius-sm: 4px;
-  --ds-radius: 6px;
-  --ds-radius-lg: 10px;
+  
+  /* Bold Text Colors */
+  --ds-text: 33 33 33; /* #212121 - Darker for better contrast */
+  --ds-text-soft: 75 75 95; /* #4B4B5F - More visible soft text */
+  
+  /* Bold Status Colors */
+  --ds-success: 0 200 83; /* #00C853 - Vibrant green */
+  --ds-warning: 255 171 0; /* #FFAB00 - Bright amber */
+  --ds-error: 255 23 68; /* #FF1744 - Vibrant red */
+  
+  /* Bold UI Element Colors */
+  --ds-border: 210 210 230; /* #D2D2E6 - More visible borders */
+  --ds-ring: 88 0 232; /* #5800E8 - focus ring matches primary */
+  --ds-muted: 232 234 246; /* #E8EAF6 - Slightly tinted muted background */
+  --ds-muted-foreground: 95 95 115; /* #5F5F73 - More visible muted text */
+  
+  /* Additional Color Palettes */
+  --ds-indigo: 63 81 181; /* #3F51B5 */
+  --ds-teal: 0 150 136; /* #009688 */
+  --ds-orange: 255 87 34; /* #FF5722 */
+  --ds-purple: 156 39 176; /* #9C27B0 */
+  --ds-cyan: 0 188 212; /* #00BCD4 */
+  --ds-lime: 205 220 57; /* #CDDC39 */
+  
+  /* Dimensions */
+  --ds-radius-sm: 6px; /* Slightly larger */
+  --ds-radius: 8px; /* Slightly larger */
+  --ds-radius-lg: 12px; /* Slightly larger */
   --ds-shadow-color: 17 17 26; /* base shadow color */
 }
 
-/* Dark Theme */
+/* Dark Theme - BOLD COLOR PALETTE */
 .dark {
-  --ds-bg: 26 26 46; /* #1A1A2E */
-  --ds-surface: 36 36 62; /* #24243E */
-  --ds-primary: 155 93 229; /* #9B5DE5 (lighter pop on dark) */
-  --ds-primary-foreground: 20 10 38; /* deep backdrop tone */
-  --ds-secondary: 106 0 244; /* #6A00F4 */
+  --ds-bg: 18 18 38; /* #121226 - Deeper dark background */
+  --ds-surface: 30 30 60; /* #1E1E3C - Deeper surface */
+  
+  /* Bold Primary Colors in Dark Mode */
+  --ds-primary: 149 76 233; /* #954BE9 - Vibrant purple */
+  --ds-primary-foreground: 255 255 255; /* white for better contrast */
+  
+  /* Bold Secondary Colors in Dark Mode */
+  --ds-secondary: 124 77 255; /* #7C4DFF - Rich purple-blue */
   --ds-secondary-foreground: 255 255 255;
-  --ds-accent: 255 111 145; /* #FF6F91 */
-  --ds-accent-foreground: 48 12 28;
-  --ds-text: 234 234 234; /* #EAEAEA */
-  --ds-text-soft: 181 181 197; /* #B5B5C5 */
-  --ds-success: 6 214 160; /* #06D6A0 */
-  --ds-warning: 255 209 102; /* #FFD166 */
-  --ds-error: 239 71 111; /* #EF476F */
-  --ds-border: 58 58 84; /* dark border */
-  --ds-ring: 155 93 229; /* focus ring */
-  --ds-muted: 48 48 74;
-  --ds-muted-foreground: 173 169 194;
+  
+  /* Bold Accent Colors in Dark Mode */
+  --ds-accent: 255 64 129; /* #FF4081 - Keeping the bright pink */
+  --ds-accent-foreground: 255 255 255;
+  
+  /* Bold Text Colors in Dark Mode */
+  --ds-text: 245 245 245; /* #F5F5F5 - Brighter text */
+  --ds-text-soft: 200 200 220; /* #C8C8DC - Brighter soft text for better visibility */
+  
+  /* Bold Status Colors in Dark Mode */
+  --ds-success: 0 230 118; /* #00E676 - Brighter green */
+  --ds-warning: 255 196 0; /* #FFC400 - Brighter amber */
+  --ds-error: 255 82 82; /* #FF5252 - Bright red */
+  
+  /* Bold UI Element Colors in Dark Mode */
+  --ds-border: 68 68 102; /* #444466 - More visible borders in dark mode */
+  --ds-ring: 149 76 233; /* #954BE9 - Matches primary */
+  --ds-muted: 40 40 72; /* #282848 - Deeper muted background */
+  --ds-muted-foreground: 190 190 215; /* #BEBED7 - Brighter muted text */
+  
+  /* Additional Color Palettes for Dark Mode */
+  --ds-indigo-dark: 92 107 192; /* #5C6BC0 */
+  --ds-teal-dark: 38 198 218; /* #26C6DA */
+  --ds-orange-dark: 255 112 67; /* #FF7043 */
+  --ds-purple-dark: 186 104 200; /* #BA68C8 */
+  --ds-cyan-dark: 41 182 246; /* #29B6F6 */
+  --ds-lime-dark: 212 225 87; /* #D4E157 */
+  
   --ds-shadow-color: 0 0 0;
 }
 
@@ -69,94 +112,155 @@ body::-webkit-scrollbar-thumb:hover {
   background: rgba(var(--ds-text-soft), 0.4);
 }
 
-/* Component tokens */
+/* Component tokens - BOLD STYLE */
 .card {
   background: rgb(var(--ds-surface));
   border: 1px solid rgb(var(--ds-border));
   border-radius: var(--ds-radius);
   box-shadow:
-    0 4px 10px -2px rgba(var(--ds-shadow-color), 0.15),
-    0 1px 3px rgba(var(--ds-shadow-color), 0.08);
+    0 8px 16px -2px rgba(var(--ds-shadow-color), 0.18),
+    0 3px 8px rgba(var(--ds-shadow-color), 0.12);
 }
 .card-muted {
   background: rgb(var(--ds-muted));
 }
 
+/* Bold Gradient Cards */
+.card-gradient-primary {
+  background: linear-gradient(135deg, rgb(var(--ds-primary)), rgb(var(--ds-secondary)));
+  color: rgb(var(--ds-primary-foreground));
+}
+.card-gradient-accent {
+  background: linear-gradient(135deg, rgb(var(--ds-accent)), rgb(var(--ds-orange)));
+  color: rgb(var(--ds-accent-foreground));
+}
+.card-gradient-success {
+  background: linear-gradient(135deg, rgb(var(--ds-success)), rgb(var(--ds-teal)));
+  color: white;
+}
+
+/* Bold Buttons */
 .btn {
   --_btn-bg: var(--ds-primary);
   --_btn-fg: var(--ds-primary-foreground);
   --_btn-bg-rgb: var(--ds-primary);
   background: rgb(var(--_btn-bg));
   color: rgb(var(--_btn-fg));
-  font-weight: 500;
+  font-weight: 600;
   border-radius: var(--ds-radius-sm);
-  height: 2.25rem;
-  padding: 0 1rem;
+  height: 2.5rem;
+  padding: 0 1.25rem;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   font-size: 0.875rem;
   line-height: 1;
   box-shadow:
-    0 2px 4px -1px rgba(var(--ds-shadow-color), 0.3),
-    0 1px 2px rgba(var(--ds-shadow-color), 0.2);
+    0 4px 12px -1px rgba(var(--ds-shadow-color), 0.35),
+    0 2px 6px rgba(var(--ds-shadow-color), 0.25);
   transition:
     background 0.2s,
     transform 0.15s,
     box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(rgba(255,255,255,0.1), rgba(255,255,255,0));
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.btn:hover::after {
+  opacity: 1;
 }
 .btn:hover {
-  filter: brightness(1.08);
+  box-shadow:
+    0 6px 16px -1px rgba(var(--ds-shadow-color), 0.40),
+    0 3px 8px rgba(var(--ds-shadow-color), 0.30);
+  transform: translateY(-1px);
 }
 .btn:active {
   transform: translateY(1px);
+  box-shadow:
+    0 2px 8px -1px rgba(var(--ds-shadow-color), 0.35),
+    0 1px 4px rgba(var(--ds-shadow-color), 0.25);
+}
+.btn-primary {
+  background: linear-gradient(135deg, rgb(var(--ds-primary)), rgb(88, 43, 226));
+  color: white;
 }
 .btn-secondary {
   --_btn-bg: var(--ds-secondary);
   --_btn-fg: var(--ds-secondary-foreground);
+  background: linear-gradient(135deg, rgb(var(--ds-secondary)), rgb(106, 0, 244));
 }
 .btn-accent {
   --_btn-bg: var(--ds-accent);
   --_btn-fg: var(--ds-accent-foreground);
+  background: linear-gradient(135deg, rgb(var(--ds-accent)), rgb(255, 64, 64));
+}
+.btn-success {
+  background: linear-gradient(135deg, rgb(var(--ds-success)), rgb(0, 178, 105));
+  color: white;
+}
+.btn-warning {
+  background: linear-gradient(135deg, rgb(var(--ds-warning)), rgb(255, 145, 0));
+  color: white;
+}
+.btn-error {
+  background: linear-gradient(135deg, rgb(var(--ds-error)), rgb(213, 0, 0));
+  color: white;
 }
 .btn-outline {
   background: transparent;
   color: rgb(var(--ds-primary));
-  border: 1px solid rgb(var(--ds-primary));
+  border: 2px solid rgb(var(--ds-primary));
   box-shadow: none;
 }
 .btn-outline:hover {
   background: rgba(var(--ds-primary) / 0.1);
 }
+.btn-outline::after {
+  display: none;
+}
 
+/* Bold Badges */
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
   font-size: 0.65rem;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   background: rgb(var(--ds-muted));
   color: rgb(var(--ds-text-soft));
-  padding: 0.35rem 0.55rem;
+  padding: 0.4rem 0.65rem;
   border-radius: 100px;
+  box-shadow: 0 2px 4px rgba(var(--ds-shadow-color), 0.15);
 }
 .badge-accent {
-  background: rgb(var(--ds-accent));
+  background: linear-gradient(135deg, rgb(var(--ds-accent)), rgb(255, 64, 64));
   color: rgb(var(--ds-accent-foreground));
 }
 .badge-success {
-  background: rgb(var(--ds-success));
-  color: #052d23;
+  background: linear-gradient(135deg, rgb(var(--ds-success)), rgb(0, 178, 105));
+  color: white;
 }
 .badge-warning {
-  background: rgb(var(--ds-warning));
-  color: #4a2c00;
+  background: linear-gradient(135deg, rgb(var(--ds-warning)), rgb(255, 145, 0));
+  color: white;
 }
 .badge-error {
-  background: rgb(var(--ds-error));
-  color: #fff;
+  background: linear-gradient(135deg, rgb(var(--ds-error)), rgb(213, 0, 0));
+  color: white;
 }
 
 .surface-border {
@@ -242,21 +346,86 @@ table.data-table tbody tr:hover {
     0 2px 6px rgba(var(--ds-shadow-color), 0.15);
 }
 
-/* Primary color utilities */
+/* Bold Color Utilities */
 .text-primary { color: rgb(var(--ds-primary)); }
-.bg-primary { background: rgb(var(--ds-primary)); }
-.bg-primary-soft { background: rgba(var(--ds-primary),0.12); }
-.bg-accent-soft { background: rgba(var(--ds-accent),0.15); }
+.text-gradient-primary { 
+  background: linear-gradient(135deg, rgb(var(--ds-primary)), rgb(var(--ds-secondary)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 600;
+}
+.text-gradient-accent { 
+  background: linear-gradient(135deg, rgb(var(--ds-accent)), rgb(var(--ds-orange)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 600;
+}
+
+/* Bold Background Utilities */
+.bg-primary { 
+  background: rgb(var(--ds-primary)); 
+}
+.bg-gradient-primary { 
+  background: linear-gradient(135deg, rgb(var(--ds-primary)), rgb(var(--ds-secondary)));
+}
+.bg-gradient-accent { 
+  background: linear-gradient(135deg, rgb(var(--ds-accent)), rgb(var(--ds-orange))); 
+}
+.bg-gradient-success { 
+  background: linear-gradient(135deg, rgb(var(--ds-success)), rgb(var(--ds-teal)));
+}
+.bg-gradient-warning { 
+  background: linear-gradient(135deg, rgb(var(--ds-warning)), rgb(var(--ds-orange)));
+}
+.bg-gradient-error { 
+  background: linear-gradient(135deg, rgb(var(--ds-error)), rgb(255, 64, 64));
+}
+
+/* Softer Background Variants */
+.bg-primary-soft { background: rgba(var(--ds-primary), 0.15); }
+.bg-secondary-soft { background: rgba(var(--ds-secondary), 0.15); }
+.bg-accent-soft { background: rgba(var(--ds-accent), 0.15); }
+.bg-success-soft { background: rgba(var(--ds-success), 0.15); }
+.bg-warning-soft { background: rgba(var(--ds-warning), 0.15); }
+.bg-error-soft { background: rgba(var(--ds-error), 0.15); }
+
+/* Bold Border Utilities */
 .border-primary { border-color: rgb(var(--ds-primary)); }
-.bg-surface-trans { background: rgba(var(--ds-surface),0.75); backdrop-filter: saturate(140%) blur(18px); -webkit-backdrop-filter: saturate(140%) blur(18px); }
+.border-gradient {
+  border: double 2px transparent;
+  background-image: linear-gradient(white, white), linear-gradient(135deg, rgb(var(--ds-primary)), rgb(var(--ds-secondary)));
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
 
-/* Opacity variants */
-.bg-surface-80 { background: rgba(var(--ds-surface),0.80); }
-.bg-surface-60 { background: rgba(var(--ds-surface),0.60); }
-.bg-surface-40 { background: rgba(var(--ds-surface),0.40); }
+/* Glass Effect Utilities */
+.bg-surface-trans { 
+  background: rgba(var(--ds-surface), 0.75); 
+  backdrop-filter: saturate(160%) blur(20px); 
+  -webkit-backdrop-filter: saturate(160%) blur(20px);
+  border: 1px solid rgba(var(--ds-border), 0.5);
+}
+.bg-primary-trans {
+  background: rgba(var(--ds-primary), 0.15);
+  backdrop-filter: saturate(180%) blur(16px);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+  border: 1px solid rgba(var(--ds-primary), 0.2);
+}
 
-/* Ring utility mapping */
+/* Opacity variants with enhanced colors */
+.bg-surface-80 { background: rgba(var(--ds-surface), 0.80); }
+.bg-surface-60 { background: rgba(var(--ds-surface), 0.60); }
+.bg-surface-40 { background: rgba(var(--ds-surface), 0.40); }
+
+/* Bold Ring Utility Mapping */
 .ring-default { --tw-ring-color: rgb(var(--ds-border)); }
+.ring-primary { --tw-ring-color: rgb(var(--ds-primary)); }
+.ring-primary-glow { 
+  --tw-ring-color: rgb(var(--ds-primary)); 
+  box-shadow: 0 0 15px -2px rgba(var(--ds-primary), 0.4);
+}
 
 /* Theme transition helper */
 .theme-transition * {

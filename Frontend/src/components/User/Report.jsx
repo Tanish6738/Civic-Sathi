@@ -145,99 +145,115 @@ const Report = () => {
 
   // View existing report details mode
   if (!isCreateMode) {
-    if (loadingExisting) return <div className="text-sm text-gray-500">Loading report...</div>;
-    if (!existing) return <div className="text-sm text-gray-500">Report not found.</div>;
+    if (loadingExisting) return <div className="text-sm text-soft">Loading report...</div>;
+    if (!existing) return <div className="text-sm text-soft">Report not found.</div>;
     const canConfirmClose = existing.status === STATUS_CLOSE_CONFIRM && (user.publicMetadata?.mongoId === existing.reporter?._id || user.id === existing.reporter?._id);
     return (
-      <div className="max-w-3xl mx-auto space-y-6 px-3 sm:px-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight mb-2">Report Details</h1>
-          <p className="text-sm text-gray-600">Submitted {new Date(existing.createdAt).toLocaleString()}</p>
-        </div>
-        <div className="space-y-5 bg-white/80 backdrop-blur p-6 rounded-xl border border-gray-200">
-          <div className="flex flex-wrap gap-3 items-center">
-            <h2 className="text-lg font-semibold text-gray-900 flex-1">{existing.title}</h2>
-            <span className="text-[11px] font-semibold px-2 py-1 rounded-md bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200">{existing.category?.name || 'Uncategorized'}</span>
-            <span className="text-[11px] font-semibold px-2 py-1 rounded-md bg-gray-100 text-gray-700 ring-1 ring-gray-300">{existing.status}</span>
+      <div className="max-w-4xl mx-auto space-y-8 px-3 sm:px-4">
+        {/* Header */}
+        <section className="relative overflow-hidden rounded-3xl border border-[rgb(var(--ds-border))] bg-gradient-to-br from-[rgb(var(--ds-primary))] via-[rgb(var(--ds-secondary))] to-[rgb(var(--ds-primary))] text-white shadow-elevate">
+          <div className="absolute inset-0 opacity-[0.15] bg-[radial-gradient(circle_at_30%_35%,white,transparent_60%)]" />
+          <div className="relative p-8 space-y-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight flex-1 min-w-0 truncate" title={existing.title}>{existing.title}</h1>
+              <span className="text-[11px] font-semibold px-2 py-1 rounded-md ring-1 ring-white/30 bg-white/15 backdrop-blur-md">{existing.category?.name || 'Uncategorized'}</span>
+              <span className="text-[11px] font-semibold px-2 py-1 rounded-md bg-white/15 ring-1 ring-white/30 backdrop-blur-md">{existing.status}</span>
+            </div>
+            <p className="text-xs font-medium text-white/80">Submitted {new Date(existing.createdAt).toLocaleString()}</p>
           </div>
-          <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{existing.description}</p>
-          {existing.photosBefore?.length > 0 && (
-            <div>
-              <h3 className="text-sm font-medium text-gray-800 mb-2">Before Photos</h3>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {existing.photosBefore.map((p,i)=>(<img key={i} src={p.url} alt="before" className="rounded-lg border border-gray-200 object-cover w-full h-52" loading="lazy" />))}
-              </div>
-            </div>
-          )}
-          {existing.photosAfter?.length > 0 && (
-            <div>
-              <h3 className="text-sm font-medium text-gray-800 mb-2">After Photos</h3>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {existing.photosAfter.map((p,i)=>(<img key={i} src={p.url} alt="after" className="rounded-lg border border-gray-200 object-cover w-full h-52" loading="lazy" />))}
-              </div>
-            </div>
-          )}
-          {canConfirmClose && (
-            <div className="pt-2">
-              <button onClick={async ()=>{ try{ await updateReport(existing._id,{ status:'closed', byUserId: user.publicMetadata?.mongoId || user.id, action:'reporter confirmed closure' }); notify('Report closed','success'); const fresh= await getReportById(existing._id); setExisting(fresh);}catch(e){ notify('Failed to confirm','error'); } }} className="px-4 h-10 rounded-lg bg-emerald-600 text-white text-sm font-medium shadow hover:bg-emerald-500">Confirm Closure</button>
-            </div>
-          )}
-          {/* Actions */}
-          <div className="pt-4 border-t border-gray-200 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-800">Officer Actions</h3>
-              {loadingActions && <span className="text-xs text-gray-500">Loading...</span>}
-            </div>
-            {actions.length === 0 && !loadingActions && <div className="text-xs text-gray-500">No actions recorded yet.</div>}
-            {actions.length > 0 && (
-              <ul className="space-y-3">
-                {actions.map(a => (
-                  <li key={a._id} className="rounded-md border border-gray-200 p-3 bg-gray-50/60">
-                    <div className="flex items-center justify-between text-[11px] text-gray-500 mb-1">
-                      <span>{new Date(a.createdAt).toLocaleString()}</span>
-                      <span className="font-medium text-gray-600">{a.officer?.name}</span>
+        </section>
+
+        {/* Body */}
+        <section className="space-y-8">
+          <div className="relative rounded-2xl border border-[rgb(var(--ds-border))] bg-[rgb(var(--ds-surface))]/85 backdrop-blur-xl p-6 shadow-sm space-y-6">
+            <p className="text-sm leading-relaxed whitespace-pre-wrap text-[rgb(var(--ds-text))]">{existing.description}</p>
+            {(existing.photosBefore?.length > 0 || existing.photosAfter?.length > 0) && (
+              <div className="grid gap-8 md:grid-cols-2">
+                {existing.photosBefore?.length > 0 && (
+                  <div>
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-soft mb-3">Before Photos</h3>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {existing.photosBefore.map((p,i)=>(<img key={i} src={p.url} alt="before" className="rounded-xl border border-[rgb(var(--ds-border))] object-cover w-full h-52 shadow-sm" loading="lazy" />))}
                     </div>
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{a.note || '(no note)'}</p>
-                    {a.photos?.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {a.photos.map((p,i)=>(<img key={i} src={p.url} alt="action" className="h-20 w-24 object-cover rounded border border-gray-200" loading="lazy" />))}
+                  </div>
+                )}
+                {existing.photosAfter?.length > 0 && (
+                  <div>
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-soft mb-3">After Photos</h3>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {existing.photosAfter.map((p,i)=>(<img key={i} src={p.url} alt="after" className="rounded-xl border border-[rgb(var(--ds-border))] object-cover w-full h-52 shadow-sm" loading="lazy" />))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            {canConfirmClose && (
+              <div className="pt-2">
+                <button
+                  onClick={async ()=>{ try{ await updateReport(existing._id,{ status:'closed', byUserId: user.publicMetadata?.mongoId || user.id, action:'reporter confirmed closure' }); notify('Report closed','success'); const fresh= await getReportById(existing._id); setExisting(fresh);}catch(e){ notify('Failed to confirm','error'); } }}
+                  className="px-5 h-11 rounded-xl bg-gradient-to-r from-[rgb(var(--ds-success))] to-[rgb(var(--ds-teal))] text-white text-sm font-semibold shadow hover:brightness-110 active:scale-[.97] transition"
+                >
+                  Confirm Closure
+                </button>
+              </div>
+            )}
+            {/* Actions */}
+            <div className="pt-4 border-t border-[rgb(var(--ds-border))] space-y-5">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold tracking-wide text-[rgb(var(--ds-text))]">Officer Actions</h3>
+                {loadingActions && <span className="text-[11px] text-soft">Loading...</span>}
+              </div>
+              {actions.length === 0 && !loadingActions && <div className="text-xs text-soft">No actions recorded yet.</div>}
+              {actions.length > 0 && (
+                <ul className="space-y-4">
+                  {actions.map(a => (
+                    <li key={a._id} className="relative rounded-xl border border-[rgb(var(--ds-border))] bg-[rgba(var(--ds-muted),0.6)] p-4 shadow-sm">
+                      <div className="flex items-center justify-between text-[10px] text-soft mb-1">
+                        <span>{new Date(a.createdAt).toLocaleString()}</span>
+                        <span className="font-semibold text-[rgb(var(--ds-text))]">{a.officer?.name}</span>
                       </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-            {isOfficer && (
-              <form onSubmit={submitAction} className="space-y-3 bg-white/70 rounded-lg border border-gray-200 p-3">
-                <textarea value={actionNote} onChange={e=>setActionNote(e.target.value)} rows={3} className="w-full text-sm rounded-md border border-gray-300 px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Add action note..." />
-                <input value={actionPhotos} onChange={e=>setActionPhotos(e.target.value)} className="w-full text-sm rounded-md border border-gray-300 px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Photo URLs (comma separated)" />
-                <div className="flex items-center gap-3">
-                  <button disabled={creatingAction} className="px-4 h-10 rounded-md bg-indigo-600 text-white text-sm font-medium shadow disabled:opacity-50">{creatingAction?'Saving...':'Add Action'}</button>
-                  <button type="button" onClick={()=>{setActionNote('');setActionPhotos('');}} className="text-xs text-gray-600 hover:underline">Reset</button>
-                </div>
-              </form>
-            )}
-          </div>
-          {/* Audit Logs */}
-          <div className="pt-4 border-t border-gray-200 space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-800">Audit Trail</h3>
-              {loadingLogs && <span className="text-xs text-gray-500">Loading...</span>}
+                      <p className="text-sm text-[rgb(var(--ds-text))] whitespace-pre-wrap">{a.note || '(no note)'}</p>
+                      {a.photos?.length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {a.photos.map((p,i)=>(<img key={i} src={p.url} alt="action" className="h-24 w-28 object-cover rounded-lg border border-[rgb(var(--ds-border))]" loading="lazy" />))}
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {isOfficer && (
+                <form onSubmit={submitAction} className="space-y-3 bg-[rgb(var(--ds-surface))]/80 rounded-xl border border-[rgb(var(--ds-border))] p-4 shadow-sm">
+                  <textarea value={actionNote} onChange={e=>setActionNote(e.target.value)} rows={3} className="w-full text-sm rounded-lg border border-[rgb(var(--ds-border))] px-3 py-2 bg-[rgb(var(--ds-surface))] focus:outline-none focus:ring-4 focus:ring-[rgba(var(--ds-ring),0.35)]" placeholder="Add action note..." />
+                  <input value={actionPhotos} onChange={e=>setActionPhotos(e.target.value)} className="w-full text-sm rounded-lg border border-[rgb(var(--ds-border))] px-3 py-2 bg-[rgb(var(--ds-surface))] focus:outline-none focus:ring-4 focus:ring-[rgba(var(--ds-ring),0.35)]" placeholder="Photo URLs (comma separated)" />
+                  <div className="flex items-center gap-4">
+                    <button disabled={creatingAction} className="px-5 h-10 rounded-lg bg-gradient-to-r from-[rgb(var(--ds-primary))] to-[rgb(var(--ds-secondary))] text-white text-xs font-semibold shadow hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition active:scale-[.97]">{creatingAction?'Saving…':'Add Action'}</button>
+                    <button type="button" onClick={()=>{setActionNote('');setActionPhotos('');}} className="text-[11px] font-medium text-soft hover:text-[rgb(var(--ds-primary))] transition">Reset</button>
+                  </div>
+                </form>
+              )}
             </div>
-            {auditLogs.length === 0 && !loadingLogs && <div className="text-xs text-gray-500">No audit logs.</div>}
-            {auditLogs.length > 0 && (
-              <ul className="space-y-2 max-h-60 overflow-y-auto pr-1">
-                {auditLogs.map(l => (
-                  <li key={l._id} className="text-xs flex flex-col bg-gray-50/60 border border-gray-200 rounded-md px-2 py-1.5">
-                    <span className="font-medium text-gray-700">{l.user?.name || 'User'}</span>
-                    <span className="text-gray-600">{l.action}</span>
-                    <span className="text-[10px] text-gray-500 mt-0.5">{new Date(l.createdAt).toLocaleString()}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
+            {/* Audit Logs */}
+            <div className="pt-4 border-t border-[rgb(var(--ds-border))] space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold tracking-wide text-[rgb(var(--ds-text))]">Audit Trail</h3>
+                {loadingLogs && <span className="text-[11px] text-soft">Loading...</span>}
+              </div>
+              {auditLogs.length === 0 && !loadingLogs && <div className="text-xs text-soft">No audit logs.</div>}
+              {auditLogs.length > 0 && (
+                <ul className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                  {auditLogs.map(l => (
+                    <li key={l._id} className="text-xs flex flex-col bg-[rgba(var(--ds-muted),0.7)] border border-[rgb(var(--ds-border))] rounded-md px-3 py-2">
+                      <span className="font-semibold text-[rgb(var(--ds-text))]">{l.user?.name || 'User'}</span>
+                      <span className="text-soft">{l.action}</span>
+                      <span className="text-[10px] text-soft mt-0.5">{new Date(l.createdAt).toLocaleString()}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
-        </div>
+        </section>
       </div>
     );
   }
@@ -253,78 +269,87 @@ const Report = () => {
         @keyframes load{0%{transform:translateX(-100%)}50%{transform:translateX(0)}100%{transform:translateX(100%)}}
       `}</style>
       <div>
-  <h1 className="text-2xl font-semibold tracking-tight mb-2">Submit a Report</h1>
-        <p className="text-sm text-gray-600">Provide detailed information so authorities can act faster.</p>
+        <h1 className="text-2xl font-semibold tracking-tight mb-2 text-gradient-primary">Submit a Report</h1>
+        <p className="text-sm text-soft">Provide detailed information so authorities can act faster.</p>
       </div>
-  <form onSubmit={onSubmit} className="relative space-y-6 bg-white/80 dark:bg-white/70 backdrop-blur rounded-xl border border-gray-200 p-6 shadow-sm overflow-hidden">
+      <form onSubmit={onSubmit} className="relative space-y-7 bg-[rgb(var(--ds-surface))]/85 backdrop-blur-xl rounded-2xl border border-[rgb(var(--ds-border))] p-6 shadow-elevate overflow-hidden">
         {submitting && (
-          <div className="absolute top-0 left-0 right-0 h-1 overflow-hidden bg-gradient-to-r from-indigo-200 via-indigo-400/40 to-indigo-200">
-            <div className="progress-bar h-full w-1/2 bg-indigo-600/80 blur-[1px]" />
+          <div className="absolute top-0 left-0 right-0 h-1 overflow-hidden bg-gradient-to-r from-[rgba(var(--ds-primary),0.25)] via-[rgba(var(--ds-secondary),0.35)] to-[rgba(var(--ds-primary),0.25)]">
+            <div className="progress-bar h-full w-1/2 bg-[rgb(var(--ds-primary))] blur-[1px]" />
           </div>
         )}
-  <div className="grid md:grid-cols-2 gap-5">
+        <div className="grid md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Title<span className="text-rose-500">*</span></label>
-            <input name="title" value={form.title} onChange={onChange} required className="w-full h-11 px-3 rounded-lg border border-gray-300 bg-white/60 focus:outline-none focus:ring-2 focus:ring-indigo-500/60 text-sm" placeholder="Short summary" />
+            <label className="text-xs font-semibold uppercase tracking-wide text-soft">Title<span className="text-[rgb(var(--ds-error))]">*</span></label>
+            <input name="title" value={form.title} onChange={onChange} required className="w-full h-12 px-3 rounded-xl border border-[rgb(var(--ds-border))] bg-[rgb(var(--ds-surface))] focus:outline-none focus:ring-4 focus:ring-[rgba(var(--ds-ring),0.35)] focus:border-[rgb(var(--ds-primary))] text-sm font-medium" placeholder="Short summary" />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Category <span className="text-xs text-gray-400 font-normal">(optional until classification)</span></label>
-            <input name="categoryId" value={form.categoryId} onChange={onChange} className="w-full h-11 px-3 rounded-lg border border-gray-300 bg-white/60 focus:outline-none focus:ring-2 focus:ring-indigo-500/60 text-sm" placeholder="Category ID (optional)" />
+            <label className="text-xs font-semibold uppercase tracking-wide text-soft">Category <span className="text-[10px] text-soft font-normal">(optional)</span></label>
+            <input name="categoryId" value={form.categoryId} onChange={onChange} className="w-full h-12 px-3 rounded-xl border border-[rgb(var(--ds-border))] bg-[rgb(var(--ds-surface))] focus:outline-none focus:ring-4 focus:ring-[rgba(var(--ds-ring),0.35)] focus:border-[rgb(var(--ds-primary))] text-sm font-medium" placeholder="Category ID (optional)" />
           </div>
           <div className="space-y-2 md:col-span-2">
-            <label className="text-sm font-medium text-gray-700">Department <span className="text-xs text-gray-400 font-normal">(optional)</span></label>
-            <input name="department" value={form.department} onChange={onChange} className="w-full h-11 px-3 rounded-lg border border-gray-300 bg-white/60 focus:outline-none focus:ring-2 focus:ring-indigo-500/60 text-sm" placeholder="Department" />
+            <label className="text-xs font-semibold uppercase tracking-wide text-soft">Department <span className="text-[10px] text-soft font-normal">(optional)</span></label>
+            <input name="department" value={form.department} onChange={onChange} className="w-full h-12 px-3 rounded-xl border border-[rgb(var(--ds-border))] bg-[rgb(var(--ds-surface))] focus:outline-none focus:ring-4 focus:ring-[rgba(var(--ds-ring),0.35)] focus:border-[rgb(var(--ds-primary))] text-sm font-medium" placeholder="Department" />
           </div>
           <div className="space-y-2 md:col-span-2">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-gray-700">Description<span className="text-rose-500">*</span></label>
-              <span className={`text-[11px] ${form.description.length >= maxDescription ? 'text-rose-600 font-medium' : 'text-gray-500'}`}>{form.description.length}/{maxDescription}</span>
+              <label className="text-xs font-semibold uppercase tracking-wide text-soft">Description<span className="text-[rgb(var(--ds-error))]">*</span></label>
+              <span className={`text-[10px] font-medium ${form.description.length >= maxDescription ? 'text-[rgb(var(--ds-error))]' : 'text-soft'}`}>{form.description.length}/{maxDescription}</span>
             </div>
-            <textarea name="description" value={form.description} onChange={onChange} required rows={5} className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white/60 focus:outline-none focus:ring-2 focus:ring-indigo-500/60 text-sm resize-none" placeholder="Describe the issue, impact, urgency..." />
+            <textarea name="description" value={form.description} onChange={onChange} required rows={5} className="w-full px-3 py-2 rounded-2xl border border-[rgb(var(--ds-border))] bg-[rgb(var(--ds-surface))] focus:outline-none focus:ring-4 focus:ring-[rgba(var(--ds-ring),0.35)] focus:border-[rgb(var(--ds-primary))] text-sm resize-none leading-relaxed" placeholder="Describe the issue, impact, urgency..." />
           </div>
           <div className="space-y-2 md:col-span-2">
-            <label className="text-sm font-medium text-gray-700">Photo URLs (comma separated, optional)</label>
-            <input name="photosBefore" value={form.photosBefore.join(',')} onChange={(e)=> setForm(f=>({...f, photosBefore: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)}))} className="w-full h-11 px-3 rounded-lg border border-gray-300 bg-white/60 focus:outline-none focus:ring-2 focus:ring-indigo-500/60 text-sm" placeholder="https://..." />
+            <label className="text-xs font-semibold uppercase tracking-wide text-soft">Photo URLs <span className="text-[10px] text-soft font-normal">(optional, comma separated)</span></label>
+            <input name="photosBefore" value={form.photosBefore.join(',')} onChange={(e)=> setForm(f=>({...f, photosBefore: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)}))} className="w-full h-12 px-3 rounded-xl border border-[rgb(var(--ds-border))] bg-[rgb(var(--ds-surface))] focus:outline-none focus:ring-4 focus:ring-[rgba(var(--ds-ring),0.35)] focus:border-[rgb(var(--ds-primary))] text-sm font-medium" placeholder="https://..." />
           </div>
         </div>
-        {aiLoading && <div className="text-sm text-indigo-600 font-medium animate-in-up">Analyzing description with AI...</div>}
+        {aiLoading && <div className="text-sm text-[rgb(var(--ds-primary))] font-medium animate-in-up">Analyzing description with AI...</div>}
         {showAIPreview && aiResult && (
-          <div className="space-y-3 bg-white/80 rounded-xl border border-indigo-200 p-4 animate-in-up">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-800">AI Suggested Classification</h3>
-              <button type="button" onClick={()=>{ setShowAIPreview(false); setAiResult(null); }} className="text-xs text-gray-500 hover:underline">Re-run</button>
+          <div className="space-y-4 bg-[rgb(var(--ds-surface))]/90 rounded-2xl border border-[rgba(var(--ds-primary),0.35)] p-5 animate-in-up shadow-md relative overflow-hidden">
+            <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-[rgba(var(--ds-primary),0.08)] to-transparent" />
+            <div className="relative flex items-center justify-between">
+              <h3 className="text-sm font-semibold tracking-wide text-[rgb(var(--ds-text))]">AI Suggested Classification</h3>
+              <button type="button" onClick={()=>{ setShowAIPreview(false); setAiResult(null); }} className="text-[11px] font-medium text-soft hover:text-[rgb(var(--ds-primary))] transition">Re-run</button>
             </div>
-            <div className="text-xs text-gray-700">Category: <span className="font-medium text-indigo-600">{aiResult.category?.name || 'Not sure'}</span></div>
-            <div className="text-xs text-gray-700">Department: <span className="font-medium">{aiResult.department?.name || '—'}</span></div>
+            <div className="relative grid gap-3 md:grid-cols-2 text-[11px] font-medium">
+              <div className="p-3 rounded-lg bg-[rgba(var(--ds-muted),0.6)] border border-[rgb(var(--ds-border))]">
+                <div className="text-soft uppercase tracking-wide text-[10px]">Category</div>
+                <div className="text-[rgb(var(--ds-primary))] font-semibold mt-1">{aiResult.category?.name || 'Not sure'}</div>
+              </div>
+              <div className="p-3 rounded-lg bg-[rgba(var(--ds-muted),0.6)] border border-[rgb(var(--ds-border))]">
+                <div className="text-soft uppercase tracking-wide text-[10px]">Department</div>
+                <div className="font-semibold mt-1">{aiResult.department?.name || '—'}</div>
+              </div>
+            </div>
             {aiResult.officers?.length > 0 && (
-              <div className="space-y-1">
-                <div className="text-xs font-medium text-gray-700">Officer Contacts</div>
-                <div className="text-xs text-gray-600 flex flex-col gap-1 max-h-40 overflow-y-auto">
+              <div className="relative space-y-2">
+                <div className="text-[10px] font-semibold uppercase tracking-wide text-soft">Officer Contacts</div>
+                <div className="flex flex-col gap-2 max-h-44 overflow-y-auto pr-1">
                   {aiResult.officers.map(o => (
-                    <div key={o.id} className="flex flex-wrap items-center gap-3 bg-gray-50/70 px-2 py-1 rounded-md border border-gray-200">
-                      <span className="font-medium text-gray-800">{o.name}</span>
-                      {o.phone && <a href={`tel:${o.phone}`} className="text-indigo-600 hover:underline">{o.phone}</a>}
-                      {o.email && <a href={`mailto:${o.email}`} className="text-indigo-600 hover:underline">{o.email}</a>}
+                    <div key={o.id} className="flex flex-wrap items-center gap-3 bg-[rgba(var(--ds-muted),0.65)] px-3 py-2 rounded-lg border border-[rgb(var(--ds-border))] text-[11px] font-medium">
+                      <span className="font-semibold text-[rgb(var(--ds-text))]">{o.name}</span>
+                      {o.phone && <a href={`tel:${o.phone}`} className="text-[rgb(var(--ds-primary))] hover:underline">{o.phone}</a>}
+                      {o.email && <a href={`mailto:${o.email}`} className="text-[rgb(var(--ds-primary))] hover:underline">{o.email}</a>}
                     </div>
                   ))}
                 </div>
               </div>
             )}
-            <div className="flex items-center gap-3 pt-1">
-              <button type="button" onClick={()=>{ /* accept classification */ setForm(f=>({...f, categoryId: f.categoryId || aiResult.category?.id || '' })); setShowAIPreview(true); notify('Classification applied','success'); }} className="px-3 h-9 rounded-md bg-indigo-600 text-white text-xs font-medium">Accept</button>
-              <button type="button" onClick={()=>{ setAiResult(null); setShowAIPreview(false); }} className="text-[11px] text-gray-600 hover:underline">Discard</button>
+            <div className="relative flex items-center gap-4 pt-1">
+              <button type="button" onClick={()=>{ setForm(f=>({...f, categoryId: f.categoryId || aiResult.category?.id || '' })); setShowAIPreview(true); notify('Classification applied','success'); }} className="px-4 h-10 rounded-lg bg-gradient-to-r from-[rgb(var(--ds-primary))] to-[rgb(var(--ds-secondary))] text-white text-xs font-semibold shadow hover:brightness-110 active:scale-[.97]">Accept</button>
+              <button type="button" onClick={()=>{ setAiResult(null); setShowAIPreview(false); }} className="text-[11px] font-medium text-soft hover:text-[rgb(var(--ds-error))] transition">Discard</button>
             </div>
           </div>
         )}
-        {error && <div className="text-sm text-rose-600 font-medium animate-in-up">{error}</div>}
-        {success && <div className="text-sm text-emerald-600 font-medium animate-in-up">Report submitted successfully!</div>}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-          <button disabled={submitting || aiLoading} type="submit" className="relative inline-flex items-center justify-center gap-2 px-5 h-11 rounded-lg bg-indigo-600 text-white text-sm font-medium shadow hover:bg-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed transition active:scale-95">
-            {(submitting || aiLoading) && <span className="absolute left-4 inline-block h-4 w-4 border-2 border-white/60 border-t-white rounded-full animate-spin" />}
-            <span>{showAIPreview ? (submitting ? 'Submitting...' : 'Confirm & Submit') : (aiLoading ? 'Analyzing...' : 'Analyze & Continue')}</span>
+        {error && <div className="text-sm font-medium text-[rgb(var(--ds-error))] animate-in-up bg-[rgba(var(--ds-error),0.08)] border border-[rgba(var(--ds-error),0.4)] rounded-md px-3 py-2">{error}</div>}
+        {success && <div className="text-sm font-medium text-[rgb(var(--ds-success))] animate-in-up bg-[rgba(var(--ds-success),0.12)] border border-[rgba(var(--ds-success),0.4)] rounded-md px-3 py-2">Report submitted successfully!</div>}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <button disabled={submitting || aiLoading} type="submit" className="relative inline-flex items-center justify-center gap-2 px-6 h-12 rounded-xl bg-gradient-to-r from-[rgb(var(--ds-primary))] via-[rgb(var(--ds-secondary))] to-[rgb(var(--ds-primary))] text-white text-sm font-semibold shadow hover:brightness-110 disabled:opacity-55 disabled:cursor-not-allowed transition active:scale-[.97] focus:outline-none focus:ring-4 focus:ring-[rgba(var(--ds-ring),0.4)]">
+            {(submitting || aiLoading) && <span className="absolute left-4 inline-block h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />}
+            <span>{showAIPreview ? (submitting ? 'Submitting…' : 'Confirm & Submit') : (aiLoading ? 'Analyzing…' : 'Analyze & Continue')}</span>
           </button>
-          <button type="button" disabled={submitting} onClick={()=>setForm({ title:'', description:'', categoryId:'', department:'', photosBefore: [] })} className="inline-flex items-center justify-center px-4 h-11 rounded-lg border border-gray-300 text-gray-600 text-sm font-medium hover:bg-gray-50 active:scale-95 transition disabled:opacity-50">Reset</button>
-          <p className="text-xs text-gray-500 sm:ml-auto">Fields marked * are required.</p>
+          <button type="button" disabled={submitting} onClick={()=>setForm({ title:'', description:'', categoryId:'', department:'', photosBefore: [] })} className="inline-flex items-center justify-center px-5 h-12 rounded-xl border border-[rgb(var(--ds-border))] text-soft text-sm font-semibold hover:bg-[rgba(var(--ds-primary),0.08)] hover:text-[rgb(var(--ds-primary))] active:scale-[.97] transition disabled:opacity-50">Reset</button>
+          <p className="text-[10px] text-soft sm:ml-auto font-medium uppercase tracking-wide">Fields marked * are required.</p>
         </div>
       </form>
     </div>
