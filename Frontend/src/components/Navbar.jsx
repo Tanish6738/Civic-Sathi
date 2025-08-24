@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Menu, Home, FileText } from 'lucide-react';
+import { Menu, Home, FileText, Layers } from 'lucide-react';
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react';
 import SignOutButton from './SignOutButton';
 
@@ -22,6 +22,9 @@ const Navbar = ({ open, setOpen, isAdmin }) => {
         <Home size={18} /> <span>Home</span>
       </NavLink>
       <div className="flex items-center gap-2 ml-auto">
+        <NavLink to="/categories" className={({isActive})=>`hidden sm:inline-flex items-center gap-1 text-sm font-medium px-3 h-9 rounded-md ${isActive? 'bg-indigo-600 text-white':'text-gray-600 hover:text-gray-900 hover:bg-gray-100'}`}>
+          <Layers size={14}/> Services
+        </NavLink>
         <NavLink to="/my-reports" className={({isActive})=>`hidden sm:inline-flex items-center gap-1 text-sm font-medium px-3 h-9 rounded-md ${isActive? 'bg-indigo-600 text-white':'text-gray-600 hover:text-gray-900 hover:bg-gray-100'}`}>
           <FileText size={14}/> My Reports
         </NavLink>

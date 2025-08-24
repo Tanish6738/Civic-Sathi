@@ -5,6 +5,7 @@ import adminEmails from '../../data/data.json';
 import SignOutButton from "../SignOutButton";
 // Central nav list (user scope)
 const BASE_LINKS = [
+  { to: '/categories', label: 'Services' },
   { to: '/report', label: 'Report' },
   { to: '/my-reports', label: 'My Reports' },
   { to: '/profile', label: 'Profile' },
@@ -25,9 +26,10 @@ export default function Navbar() {
   return (
     <header className="flex justify-between items-center px-4 sm:px-6 py-3 bg-white/90 backdrop-blur shadow-sm relative gap-4">
       <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
-        <img src="https://www.digilocker.gov.in/assets/img/emblem-dark.png" alt="Govt Emblem" className="h-8 sm:h-10 w-auto" />
-        <img src="https://www.digilocker.gov.in/assets/img/digilocker_logo.png" alt="DigiLocker Logo" className="h-8 sm:h-10 w-auto" />
-      </div>
+        <h1 className="text-2xl font-extrabold text-purple-600">
+          Nigam Ai
+        </h1>
+          </div>
 
       {/* Desktop nav links */}
       <nav className="hidden md:flex items-center gap-3 text-sm font-medium">

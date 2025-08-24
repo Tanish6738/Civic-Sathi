@@ -6,6 +6,7 @@ import Profile from '../components/User/Profile';
 import Landing from '../components/Basic/landing';
 import UsersHome from '../components/User/UsersHome';
 import Report from '../components/User/Report';
+import CategoryFormPage from '../components/CategoryFroms/CategoryFormPage';
 import { Routes, Route } from 'react-router-dom';
 import AdminDashBoard from '../components/Admin/AdminDashBoard';
 import AllReports from '../components/Admin/Reports/AllReports';
@@ -28,7 +29,8 @@ const AppRoutes = () => (
     <Route path="/" element={<Landing />} />
     <Route path="/users" element={withLayout(<UsersHome />)} />
     <Route path="/report" element={withLayout(<Report />)} />
-    <Route path="/my-reports" element={withLayout(<MyReports />)} />
+  <Route path="/my-reports" element={withLayout(<MyReports />)} />
+  <Route path="/categories" element={withLayout(<CategoryFormPage />)} />
     <Route path="/profile" element={withLayout(<Profile />)} />
     <Route path="/admin" element={withLayout(<RequireAdmin><AdminDashBoard /></RequireAdmin>)} />
     <Route path="/admin/reports" element={withLayout(<RequireAdmin><AllReports /></RequireAdmin>)} />

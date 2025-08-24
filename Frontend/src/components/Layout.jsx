@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useUser } from '@clerk/clerk-react';
-import { Users, BarChart3, User, FileText, Shield, ListChecks } from 'lucide-react';
+import { Users, BarChart3, User, FileText, Shield, ListChecks, Layers } from 'lucide-react';
 import adminEmails from '../data/data.json';
 import SidebarTab from './SidebarTab';
 import Navbar from './Navbar';
@@ -9,6 +9,7 @@ import Navbar from './Navbar';
 const NAV = [
   { to: '/users', label: 'Users', icon: Users },
   { to: '/report', label: 'Report', icon: BarChart3 },
+  { to: '/categories', label: 'Services', icon: Layers },
   { to: '/my-reports', label: 'My Reports', icon: FileText },
   { to: '/profile', label: 'Profile', icon: User },
 ];
