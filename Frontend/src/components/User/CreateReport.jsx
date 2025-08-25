@@ -21,6 +21,7 @@ import {
   Info,
 } from "lucide-react";
 import { categorizeReport, createReport } from "../../services/report.services";
+import { uploadFile as uploadMedia } from "../../services/upload.services";
 import { getCategories } from "../../services/category.services";
 import OfficerContacts from "./OfficerContacts";
 import { useToast } from "../../contexts/ToastContext";
@@ -46,7 +47,8 @@ const CreateReport = () => {
   const step = steps[stepIdx];
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [photos, setPhotos] = useState([]); // array of { url, name }
+  const [photos, setPhotos] = useState([]); // array of { url, name, uploading?, error? }
+  const [uploadQueue, setUploadQueue] = useState([]); // track in-flight uploads (ids)
   const [photoInput, setPhotoInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResult, setAiResult] = useState(null); // { category, department, officers, suggestions? }
@@ -275,12 +277,25 @@ const CreateReport = () => {
     const files = Array.from(fileList)
       .filter((f) => f.type.startsWith("image/"))
       .slice(0, 10);
-    files.forEach((f) => {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        setPhotos((p) => [...p, { url: ev.target.result, name: f.name }]);
-      };
-      reader.readAsDataURL(f);
+    files.forEach((file) => {
+      const tempId = `${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      // Optimistic preview using object URL
+      const previewURL = URL.createObjectURL(file);
+      setPhotos((prev) => [
+        ...prev,
+        { id: tempId, url: previewURL, name: file.name, uploading: true }
+      ]);
+      setUploadQueue((q) => [...q, tempId]);
+      (async () => {
+        try {
+          const uploaded = await uploadMedia(file, { folder: 'report-photos' });
+          setPhotos((prev) => prev.map(p => p.id === tempId ? { ...p, url: uploaded.url, name: uploaded.name || file.name, uploading: false, fileId: uploaded.fileId, thumbnailUrl: uploaded.thumbnailUrl } : p));
+        } catch (err) {
+          setPhotos((prev) => prev.map(p => p.id === tempId ? { ...p, uploading: false, error: err.message || 'Upload failed' } : p));
+        } finally {
+          setUploadQueue((q) => q.filter(id => id !== tempId));
+        }
+      })();
     });
   }, []);
   const onDrop = (e) => {
@@ -665,6 +680,32 @@ const CreateReport = () => {
                               className="h-full w-full object-cover"
                               loading="lazy"
                             />
+                            {p.uploading && (
+                              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                <div className="h-8 w-8 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                              </div>
+                            )}
+                            {p.error && !p.uploading && (
+                              <div className="absolute inset-0 bg-red-600/70 text-white flex flex-col items-center justify-center p-2 text-[10px] text-center gap-1">
+                                <span>{p.error}</span>
+                                <button
+                                  className="underline"
+                                  onClick={() => {
+                                    // retry
+                                    setPhotos(prev => prev.map(x => x === p ? { ...x, uploading: true, error: null } : x));
+                                    (async () => {
+                                      try {
+                                        const fName = p.name || 'image';
+                                        // Can't re-upload without original File; advise user to reselect.
+                                        throw new Error('Please re-add this file (original blob not retained).');
+                                      } catch (err) {
+                                        setPhotos(prev => prev.map(x => x === p ? { ...x, uploading: false, error: err.message } : x));
+                                      }
+                                    })();
+                                  }}
+                                >Retry</button>
+                              </div>
+                            )}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
                               <button
                                 type="button"
@@ -719,7 +760,7 @@ const CreateReport = () => {
                               className="flex items-center justify-between gap-2"
                             >
                               <span className="truncate flex-1 text-[11px]">
-                                {p.name || p.url}
+                                {p.name || p.url} {p.uploading && ' (uploading...)'} {p.error && ' (error)'}
                               </span>
                               <button
                                 type="button"
@@ -750,7 +791,7 @@ const CreateReport = () => {
                   onClick={next}
                   className="btn inline-flex items-center gap-2 h-12 px-5 rounded-lg shadow-sm"
                 >
-                  Continue <ArrowRight size={24} />
+                  {uploadQueue.length ? `Uploading (${uploadQueue.length})...` : 'Continue'} <ArrowRight size={24} />
                 </motion.button>
                 <button
                   onClick={prev}

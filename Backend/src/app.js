@@ -10,6 +10,7 @@ const departmentRoutes = require('../routes/departmentRoutes');
 const adminRoutes = require('../routes/adminRoutes');
 const officerRoutes = require('../routes/officerRoutes');
 const notificationRoutes = require('../routes/notificationRoutes');
+const uploadRoutes = require('../routes/uploadRoutes');
 
 const { attachUser } = require('../middleware/auth');
 const requestId = require('../middleware/requestId');
@@ -41,6 +42,7 @@ app.use('/api/departments', departmentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/officer', officerRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // Metrics (basic JSON) - could secure with admin middleware if desired
 app.get('/api/_metrics', (req, res) => {

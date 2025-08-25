@@ -22,6 +22,7 @@ const OfficerReportHistory = React.lazy(()=> import('../components/Officier/Offi
 import DepartmentsHome from "../components/User/DepartmentsHome";
 import DepartmentDetail from "../components/User/DepartmentDetail";
 import { UserProvider } from "../contexts/UserContext";
+import ImageUpload from "../components/ImageUpload";
 
 const RequireAdmin = ({ children }) => {
   const { isLoaded, user } = useUser();
@@ -82,6 +83,10 @@ const AppRoutes = () => {
     <UserProvider initialUser={dbUser}>
       <Routes>
         {/* Officer exclusive routes (admins NOT allowed) */}
+        <Route
+          path="/image-upload"
+          element={withLayout(<ImageUpload />)}
+        />
         <Route
           path="/officer"
           element={<ProtectedRoute>{withLayout(<React.Suspense fallback={<div className='p-6 text-sm text-soft/60'>Loading officer dashboard...</div>}><RequireOfficer dbUser={dbUser}><OfficerDashboard /></RequireOfficer></React.Suspense>)}</ProtectedRoute>}

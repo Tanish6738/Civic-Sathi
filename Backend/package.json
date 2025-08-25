@@ -6,20 +6,21 @@
     "dev": "nodemon server.js",
     "start": "node server.js",
     "seed:departments": "node seed/seedDepartmentsAndCategories.js",
-  "test": "echo \"Error: no test specified\" && exit 1",
-  "verify:phase2": "node scripts/phase2-verify.js",
-  "verify:phase3-4": "node scripts/phase3-4-verify.js",
-  "verify:phase5": "node scripts/phase5-verify.js"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "verify:phase2": "node scripts/phase2-verify.js",
+    "verify:phase3-4": "node scripts/phase3-4-verify.js",
+    "verify:phase5": "node scripts/phase5-verify.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
-  "@google/generative-ai": "^0.21.0",
+    "@google/generative-ai": "^0.21.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
+    "imagekit": "^6.0.0",
     "mongoose": "^8.18.0",
     "morgan": "^1.10.1",
     "multer": "^2.0.2"
