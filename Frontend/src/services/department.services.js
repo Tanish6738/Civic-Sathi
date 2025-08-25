@@ -11,8 +11,13 @@ function buildQuery(params = {}) {
 
 export async function createDepartment(data){ const { data:res } = await api.post('/departments', data); return res.data; }
 export async function getDepartments(params={}){ const { data:res } = await api.get(`/departments${buildQuery(params)}`); return res.data; }
+export async function adminListDepartments(params={}){ const { data:res } = await api.get(`/departments${buildQuery(params)}`); return { items: res.data, meta: res.meta || null }; }
 export async function getDepartmentById(id){ const { data:res } = await api.get(`/departments/${id}`); return res.data; }
 export async function updateDepartment(id,data){ const { data:res } = await api.put(`/departments/${id}`, data); return res.data; }
 export async function deleteDepartment(id){ const { data:res } = await api.delete(`/departments/${id}`); return res.data; }
 
-export default { createDepartment, getDepartments, getDepartmentById, updateDepartment, deleteDepartment };
+export async function restoreDepartment(id){ const { data:res } = await api.post(`/departments/${id}/restore`); return res.data; }
+
+export async function bulkAssignDepartment(data){ const { data:res } = await api.post('/departments/bulk-assign', data); return res.data; }
+
+export default { createDepartment, getDepartments, adminListDepartments, getDepartmentById, updateDepartment, deleteDepartment, restoreDepartment, bulkAssignDepartment };

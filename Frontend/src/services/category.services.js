@@ -21,6 +21,12 @@ export async function getCategories(params = {}) {
   return res.data;
 }
 
+// Admin usage: returns { items, meta }
+export async function adminListCategories(params = {}) {
+  const { data: res } = await api.get(`/categories${buildQuery(params)}`);
+  return { items: res.data, meta: res.meta || null };
+}
+
 export async function getCategoryById(id) {
   const { data: res } = await api.get(`/categories/${id}`);
   return res.data;
@@ -36,4 +42,22 @@ export async function deleteCategory(id) {
   return res.data;
 }
 
-export default { createCategory, getCategories, getCategoryById, updateCategory, deleteCategory };
+export async function restoreCategory(id) {
+  const { data: res } = await api.post(`/categories/${id}/restore`);
+  return res.data;
+}
+
+export async function bulkImportCategories(payload) {
+  const { data: res } = await api.post('/categories/bulk', payload);
+  return res.data;
+}
+
+export async function exportCategories(params = {}) {
+  // default CSV; if format=json returns JSON body else text
+  const qs = new URLSearchParams(params).toString();
+  const url = `/categories/export/all${qs ? '?' + qs : ''}`;
+  const response = await api.get(url, { responseType: params.format==='json' ? 'json' : 'text' });
+  return response.data;
+}
+
+export default { createCategory, getCategories, adminListCategories, getCategoryById, updateCategory, deleteCategory, restoreCategory, bulkImportCategories, exportCategories };

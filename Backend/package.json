@@ -10,6 +10,9 @@
     "verify:phase2": "node scripts/phase2-verify.js",
     "verify:phase3-4": "node scripts/phase3-4-verify.js",
     "verify:phase5": "node scripts/phase5-verify.js"
+  ,"verify:structure:phase2": "node scripts/structure-phase2-verify.js"
+  ,"verify:structure:phase4": "node scripts/structure-phase4-verify.js"
+  ,"verify:structure:phase5": "node scripts/structure-phase5-verify.js"
   },
   "keywords": [],
   "author": "",

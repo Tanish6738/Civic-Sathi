@@ -5,12 +5,16 @@ import CallDataSection from './CallDataSection';
 import WebComplaintsSection from './WebComplaintsSection';
 import AnalyticsDashboard from './AnalyticsDashboard';
 import UserManagement from './UserManagement';
+import CategoryManager from './Structure/CategoryManager';
+import DepartmentManager from './Structure/DepartmentManager';
+import StructureAuditPanel from './Structure/StructureAuditPanel';
 
 // Simple tabs config so it's easy to extend later
 const TABS = [
   { key: 'analytics', label: 'Analytics Overview' },
   { key: 'ai', label: 'AI Insights' },
-  { key: 'users', label: 'User Management' }
+  { key: 'users', label: 'User Management' },
+  { key: 'structure', label: 'Structure Management' }
 ];
 
 // Container styling assumes Tailwind (present in dependencies). Adjust if needed.
@@ -77,6 +81,19 @@ const AdminDashBoard = () => {
         {currentTab.key === 'users' && (
           <div role="tabpanel" className="animate-fade-in">
             <UserManagement />
+          </div>
+        )}
+        {currentTab.key === 'structure' && (
+          <div role="tabpanel" className="animate-fade-in flex flex-col gap-12">
+            <div>
+              <h2 className="text-lg font-semibold mb-3">Categories</h2>
+              <CategoryManager />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold mb-3">Departments</h2>
+              <DepartmentManager />
+            </div>
+            <StructureAuditPanel />
           </div>
         )}
       </div>

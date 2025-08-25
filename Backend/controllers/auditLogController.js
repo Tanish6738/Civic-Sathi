@@ -40,11 +40,19 @@ exports.createAuditLog = async (req, res) => {
 // GET /api/audit-logs
 exports.listAuditLogs = async (req, res) => {
   try {
-    const { user: userId, report: reportId, action, page = 1, limit = 50 } = req.query;
+    const { user: userId, report: reportId, action, page = 1, limit = 50, categoryId, departmentId, structureOnly } = req.query;
     const filters = {};
     if (userId) filters.user = userId;
     if (reportId) filters.report = reportId;
     if (action) filters.action = new RegExp(`^${action}$`, 'i');
+    if (categoryId) filters['meta.categoryId'] = categoryId;
+    if (departmentId) filters['meta.departmentId'] = departmentId;
+    if (structureOnly === 'true') {
+      filters.action = { $in: [
+        'CATEGORY_CREATE','CATEGORY_UPDATE','CATEGORY_SOFT_DELETE','CATEGORY_RESTORE',
+        'DEPARTMENT_CREATE','DEPARTMENT_UPDATE','DEPARTMENT_SOFT_DELETE','DEPARTMENT_RESTORE'
+      ] };
+    }
     const pageNum = Math.max(parseInt(page, 10) || 1, 1);
     const limitNum = Math.min(Math.max(parseInt(limit, 10) || 50, 1), 200);
     const skip = (pageNum - 1) * limitNum;

@@ -300,15 +300,15 @@ Race conditions overwriting officer/category lists | Conditional updates (match 
 
 | Phase | Scope / Deliverable | Status | Notes |
 |-------|----------------------|:------:|-------|
-| 0 | Docs: lifecycle + permissions decided | [ ] |  |
-| 1 | Schema updates & indexes | [ ] |  |
-| 2 | Route security + policies | [ ] |  |
-| 3 | Validation + pagination + responses | [ ] |  |
-| 4 | Referential integrity & cascade | [ ] |  |
-| 5 | Audit logging integration | [ ] |  |
+| 0 | Docs: lifecycle + permissions decided | [x] | Cascade: prevent soft-delete if active reports reference category (Phase 3 enforcement) |
+| 1 | Schema updates & indexes | [x] | Added isDeleted, slug, indexes, partial uniques |
+| 2 | Route security + policies | [x] | Policies + middleware applied |
+| 3 | Validation + pagination + responses | [x] | Added pagination & validation + response envelope |
+| 4 | Referential integrity & cascade | [x] | Soft delete cascade + active report guards |
+| 5 | Audit logging integration | [x] | Create/update/delete audit entries added |
 | 6 | Caching & ETag | [ ] |  |
-| 7 | Bulk operations | [ ] |  |
-| 8 | Admin UI enhancements | [ ] |  |
+| 7 | Bulk operations | [x] | Endpoints bulk import/export, bulk-assign added (Phase 7) |
+| 8 | Admin UI enhancements | [ ] | Category & Department manager tabs added (needs audit diff view & officer assignment modal) |
 | 9 | Notifications (optional) | [ ] |  |
 | 10 | Data quality metrics | [ ] |  |
 | 11 | Tests & verification scripts | [ ] |  |

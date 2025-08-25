@@ -1,3 +1,12 @@
+// Admin list/filter users (supports role, search)
+export async function getAllUsers(params={}) {
+  const qs = new URLSearchParams();
+  Object.entries(params).forEach(([k,v])=>{ if(v!==undefined && v!==null && v!=='') qs.append(k,v); });
+  const query = qs.toString();
+  const { data:res } = await api.get(`/users${query?`?${query}`:''}`);
+  return res.data;
+}
+
 'use strict';
 
 import api, { setClerkId } from '../utils/axios';
