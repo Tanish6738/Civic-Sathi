@@ -16,6 +16,7 @@ const statusStyles = {
   assigned: 'bg-[rgba(var(--ds-primary),0.15)] text-[rgb(var(--ds-primary))] ring-1 ring-[rgba(var(--ds-primary),0.45)]',
   in_progress: 'bg-[rgba(var(--ds-accent),0.15)] text-[rgb(var(--ds-accent))] ring-1 ring-[rgba(var(--ds-accent),0.45)]',
   awaiting_verification: 'bg-[rgba(var(--ds-primary),0.18)] text-[rgb(var(--ds-primary))] ring-1 ring-[rgba(var(--ds-primary),0.4)]',
+  misrouted: 'bg-[rgba(var(--ds-error),0.18)] text-[rgb(var(--ds-error))] ring-1 ring-[rgba(var(--ds-error),0.45)]',
   verified: 'bg-[rgba(var(--ds-success),0.18)] text-[rgb(var(--ds-success))] ring-1 ring-[rgba(var(--ds-success),0.45)]',
   closed: 'bg-[rgba(var(--ds-text-soft),0.15)] text-[rgb(var(--ds-text-soft))] ring-1 ring-[rgba(var(--ds-text-soft),0.35)]',
   deleted: 'bg-[rgba(var(--ds-error),0.15)] text-[rgb(var(--ds-error))] ring-1 ring-[rgba(var(--ds-error),0.45)]'
@@ -103,7 +104,7 @@ const MyReports = () => {
 
   useEffect(() => { fetchReports(); }, [fetchReports]);
 
-  const statusOrder = ['submitted','assigned','in_progress','awaiting_verification','verified','closed','deleted'];
+  const statusOrder = ['submitted','assigned','in_progress','awaiting_verification','misrouted','verified','closed','deleted'];
 
   const filtered = useMemo(() => {
     return (items || []).filter(r => {

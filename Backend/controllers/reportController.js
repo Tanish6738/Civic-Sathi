@@ -8,6 +8,7 @@ const { categorizeReportAI } = require('../utils/aiCategorizer');
 const Department = require('../models/Department');
 const { applyStatusTransition, normalizePhotos } = require('../utils/reportUtils');
 const { canModifyReport } = require('../policies/reportPolicies');
+const { notifyReportStatus } = require('../utils/notify');
 
 // Consistent response helper
 function respond(res, { success = true, status = 200, data = null, message = '' }) {
@@ -142,7 +143,7 @@ exports.createReport = async (req, res) => {
       historyEntry.action = 'created (auto-assigned)';
     }
 
-    const report = await Report.create({
+  const report = await Report.create({
       title: title.trim(),
       description: description.trim(),
       department: deptName || undefined,
@@ -155,9 +156,10 @@ exports.createReport = async (req, res) => {
     });
 
     if (chosenOfficerId) {
-      // push separate history entry representing officer's implicit receipt
       report.history.push({ by: chosenOfficerId, role: 'officer', action: `auto-assigned (load-balanced)` });
       await report.save();
+      // Notify reporter & officer(s)
+      try { const { notifyReportStatus } = require('../utils/notify'); await notifyReportStatus(report, 'assigned', { _id: chosenOfficerId, name: chosenOfficerName }); } catch(_) {}
     }
 
     return respond(res, { data: report, message: chosenOfficerId ? `Report created and auto-assigned to ${chosenOfficerName}` : 'Report created' });
@@ -367,11 +369,13 @@ exports.updateReport = async (req, res) => {
 
     if (title) report.title = title.trim();
     if (description) report.description = description.trim();
+    let transitionedTo = null;
     if (targetStatus) {
       const tr = await applyStatusTransition(report, targetStatus, actor || { role: 'reporter', id: report.reporter });
       if (!tr.ok) {
         return respond(res, { success: false, status: 409, message: tr.error });
       }
+      transitionedTo = targetStatus;
     }
     if (categoryId) report.category = categoryId;
     if (Array.isArray(assignedTo)) report.assignedTo = assignedTo;
@@ -399,6 +403,10 @@ exports.updateReport = async (req, res) => {
     }
 
     await report.save();
+    // Fire notifications post-persist for statuses of interest
+    if (transitionedTo) {
+      try { await notifyReportStatus(report, transitionedTo, req.user); } catch(_){}
+    }
     return respond(res, { data: report, message: 'Report updated' });
   } catch (err) {
     console.error('updateReport error:', err);

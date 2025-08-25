@@ -22,4 +22,24 @@ async function notifyAwaitingVerification(report) {
   return notifyUsers([report.reporter], 'report.awaiting_verification', { refReport: report._id });
 }
 
-module.exports = { notifyUsers, notifyMisroute, notifyAwaitingVerification };
+// Generic status-based notifications (extend as needed)
+async function notifyReportStatus(report, newStatus, actor) {
+  if (!report) return 0;
+  const basePayload = { status: newStatus, actor: actor?._id };
+  switch (newStatus) {
+    case 'assigned':
+      if (Array.isArray(report.assignedTo) && report.assignedTo.length) {
+        return notifyUsers([...new Set([report.reporter, ...report.assignedTo])], 'report.assigned', { refReport: report._id, payload: { ...basePayload, officerName: actor?.name } });
+      }
+      break;
+    case 'closed':
+      return notifyUsers([report.reporter], 'report.closed', { refReport: report._id, payload: basePayload });
+    case 'verified':
+      return notifyUsers([report.reporter], 'report.verified', { refReport: report._id, payload: basePayload });
+    default:
+      return 0;
+  }
+  return 0;
+}
+
+module.exports = { notifyUsers, notifyMisroute, notifyAwaitingVerification, notifyReportStatus };

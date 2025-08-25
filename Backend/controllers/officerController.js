@@ -246,6 +246,9 @@ exports.misroute = async (req, res) => {
     if (!tr.ok)
       return respond(res, { success: false, status: 409, error: tr.error });
     await report.save();
+    try {
+      await notifyMisroute(report);
+    } catch (_) {}
     return respond(res, { data: report });
   } catch (e) {
     console.error("officer.misroute", e);

@@ -14,6 +14,7 @@ const statusMeta = {
   assigned: { label: 'Assigned', cls: 'bg-[rgba(var(--ds-primary),0.15)] text-[rgb(var(--ds-primary))] ring-1 ring-[rgba(var(--ds-primary),0.45)]' },
   in_progress: { label: 'In Progress', cls: 'bg-[rgba(var(--ds-accent),0.18)] text-[rgb(var(--ds-accent))] ring-1 ring-[rgba(var(--ds-accent),0.45)]' },
   awaiting_verification: { label: 'Await Verify', cls: 'bg-[rgba(var(--ds-primary),0.2)] text-[rgb(var(--ds-primary))] ring-1 ring-[rgba(var(--ds-primary),0.45)]' },
+  misrouted: { label: 'Misrouted', cls: 'bg-[rgba(var(--ds-error),0.18)] text-[rgb(var(--ds-error))] ring-1 ring-[rgba(var(--ds-error),0.5)]' },
   verified: { label: 'Verified', cls: 'bg-[rgba(var(--ds-success),0.18)] text-[rgb(var(--ds-success))] ring-1 ring-[rgba(var(--ds-success),0.45)]' },
   closed: { label: 'Closed', cls: 'bg-[rgba(var(--ds-text-soft),0.2)] text-[rgb(var(--ds-text-soft))] ring-1 ring-[rgba(var(--ds-text-soft),0.35)]' },
   deleted: { label: 'Deleted', cls: 'bg-[rgba(var(--ds-error),0.15)] text-[rgb(var(--ds-error))] ring-1 ring-[rgba(var(--ds-error),0.45)]' },
@@ -83,7 +84,7 @@ const AllReports = () => {
 
   useEffect(()=>{ if(isAdmin && isLoaded){ load(); loadUsers(); } },[isAdmin, isLoaded, page]);
 
-  const statusOrder = ['submitted','assigned','in_progress','awaiting_verification','verified','closed','deleted','draft'];
+  const statusOrder = ['submitted','assigned','in_progress','awaiting_verification','misrouted','verified','closed','deleted','draft'];
   const filtered = useMemo(()=>{
     return items.filter(r => {
       if (status && r.status !== status) return false;
@@ -211,7 +212,7 @@ const AllReports = () => {
             <span className="h-2 w-2 rounded-full bg-white/70 animate-pulse" />
             <span>{sorted.length} results</span>
           </div>
-          <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2 hidden md:inline-flex">
+          <div className="hidden md:inline-flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2">
             <Sparkles size={14} /> <span>Click headers to sort</span>
           </div>
         </div>

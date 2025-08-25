@@ -11,13 +11,14 @@ export default function ReportDetailDrawer({ report, onClose, users = [], onUpda
   const [tab, setTab] = useState('overview'); // mobile-first tab segmentation
   const [openStatus, setOpenStatus] = useState(false); // custom dropdown open state
 
-  const statusOptions = ['submitted','assigned','in_progress','awaiting_verification','verified','closed'];
+  const statusOptions = ['submitted','assigned','in_progress','awaiting_verification','misrouted','verified','closed'];
   const statusMeta = {
     submitted: { label: 'Submitted', icon: <Layers size={14}/> , cls: 'bg-[rgba(var(--ds-warning),0.15)] text-[rgb(var(--ds-warning))] ring-1 ring-[rgba(var(--ds-warning),0.4)]' },
     assigned: { label: 'Assigned', icon: <UserPlus size={14}/> , cls: 'bg-[rgba(var(--ds-primary),0.15)] text-[rgb(var(--ds-primary))] ring-1 ring-[rgba(var(--ds-primary),0.4)]' },
     in_progress: { label: 'In Progress', icon: <Clock size={14}/> , cls: 'bg-[rgba(var(--ds-accent),0.18)] text-[rgb(var(--ds-accent))] ring-1 ring-[rgba(var(--ds-accent),0.45)]' },
     awaiting_verification: { label: 'Await Verify', icon: <CheckSquare size={14}/> , cls: 'bg-[rgba(var(--ds-primary),0.2)] text-[rgb(var(--ds-primary))] ring-1 ring-[rgba(var(--ds-primary),0.45)]' },
-    verified: { label: 'Verified', icon: <ShieldCheck size={14}/> , cls: 'bg-[rgba(var(--ds-success),0.18)] text-[rgb(var(--ds-success))] ring-1 ring-[rgba(var(--ds-success),0.45)]' },
+  misrouted: { label: 'Misrouted', icon: <ShieldCheck size={14}/> , cls: 'bg-[rgba(var(--ds-error),0.18)] text-[rgb(var(--ds-error))] ring-1 ring-[rgba(var(--ds-error),0.5)]' },
+  verified: { label: 'Verified', icon: <ShieldCheck size={14}/> , cls: 'bg-[rgba(var(--ds-success),0.18)] text-[rgb(var(--ds-success))] ring-1 ring-[rgba(var(--ds-success),0.45)]' },
     closed: { label: 'Closed', icon: <CheckCircle2 size={14}/> , cls: 'bg-[rgba(var(--ds-text-soft),0.2)] text-[rgb(var(--ds-text-soft))] ring-1 ring-[rgba(var(--ds-text-soft),0.35)]' }
   };
 
@@ -41,7 +42,7 @@ export default function ReportDetailDrawer({ report, onClose, users = [], onUpda
   async function save(){
     setSaving(true);
     try {
-      const updated = await updateReport(report._id, { assignedTo: assigned, status, action: 'updated via drawer', byUserId: report.reporter?._id });
+  const updated = await updateReport(report._id, { assignedTo: assigned, status, action: 'updated via drawer', byUserId: report.reporter?._id });
       notify('Report updated','success');
       onUpdated && onUpdated(updated);
     } catch(e){
@@ -123,6 +124,14 @@ export default function ReportDetailDrawer({ report, onClose, users = [], onUpda
                   <p className="text-soft">Current Status</p>
                   <p className="font-medium text-[rgb(var(--ds-text))]">{statusMeta[status]?.label || status}</p>
                 </div>
+                {report.status === 'misrouted' && (
+                  <div className="space-y-1 col-span-2">
+                    <p className="text-soft">Misroute Reason</p>
+                    <p className="font-medium text-[rgb(var(--ds-error))] bg-[rgba(var(--ds-error),0.12)] border border-[rgba(var(--ds-error),0.4)] rounded-md px-3 py-2 text-[11px] leading-relaxed whitespace-pre-wrap">
+                      {report.misrouteReason || 'No reason provided.'}
+                    </p>
+                  </div>
+                )}
               </div>
             </section>
           )}

@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Menu, ChevronDown, FileText, Layers, Shield, ListChecks, PlusCircle, Users, History, Building2, User as UserIcon, SunMedium, MoonStar } from 'lucide-react';
+import Bell from './Notifications/Bell';
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react';
 import SignOutButton from './SignOutButton';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -251,6 +252,7 @@ const Navbar = ({ open, setOpen, isAdmin }) => {
         </SignedOut>
         <SignedIn>
           <div className="hidden sm:flex items-center gap-2">
+            <Bell />
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }}>
               <UserButton appearance={{ elements: { avatarBox: 'h-9 w-9' } }} afterSignOutUrl="/" />
             </motion.div>
